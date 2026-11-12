@@ -30,8 +30,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="RunwayInsta" component={Runway} defaultProps={{ variant: "insta" as const }} fps={RW.fps} width={RW.width} height={RW.height} durationInFrames={RW.frames} />
     <Composition id="RunwayTikTok" component={Runway} defaultProps={{ variant: "tiktok" as const }} fps={RW.fps} width={RW.width} height={RW.height} durationInFrames={RW.frames} />
     {/* Runway-Film mit BLACK FRIDAY hinter dem Model am Anfang, ohne Titel */}
-    <Composition id="RunwayBF" component={RunwayBF} defaultProps={{ glass: false }} fps={RBF.fps} width={RBF.width} height={RBF.height} durationInFrames={RBF.frames} />
+    <Composition id="RunwayBF" component={RunwayBF} defaultProps={{ glass: false, outro: false }} fps={RBF.fps} width={RBF.width} height={RBF.height} durationInFrames={RBF.frames} />
     {/* gleiche Version mit Glas-Schrift */}
-    <Composition id="RunwayBFGlass" component={RunwayBF} defaultProps={{ glass: true }} fps={RBF.fps} width={RBF.width} height={RBF.height} durationInFrames={RBF.frames} />
+    <Composition id="RunwayBFGlass" component={RunwayBF} defaultProps={{ glass: true, outro: true }} fps={RBF.fps} width={RBF.width} height={RBF.height} durationInFrames={RBF.frames} />
   </>
 );

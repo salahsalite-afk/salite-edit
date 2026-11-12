@@ -1,4 +1,5 @@
 import { GlassText } from "./GlassText";
+import { PHONE, PhoneOutro } from "./PhoneOutro";
 import { AbsoluteFill, Audio, continueRender, delayRender, Freeze, Img, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 
 // Runway-Film Vollbild 16:9 ohne Titel "SALITE RUNWAY" und ohne Tanktop-Look.
@@ -31,6 +32,7 @@ export const PASSWORT_URL = ""; // vom Kunden: Adresse der Passwort-Seite
 const PREIS = "69 €";
 const SHOT_IN = PW_IN + 8;
 const SHOT_LEN = 115;
+const PHONE_START = 660; // Handy-Outro über der Endkarte
 
 let loaded = false;
 const loadAnton = () => {
@@ -49,7 +51,7 @@ loadAnton();
 const pad = (n: number) => String(n).padStart(4, "0");
 const full: React.CSSProperties = { width: "100%", height: "100%" };
 
-export const RunwayBF: React.FC<{ glass?: boolean }> = ({ glass = false }) => {
+export const RunwayBF: React.FC<{ glass?: boolean; outro?: boolean }> = ({ glass = false, outro = false }) => {
   const frame = useCurrentFrame();
   const textScale = interpolate(frame, [0, 30], [1.04, 1], { extrapolateRight: "clamp" });
   const showText = frame < TEXT_END;
@@ -148,7 +150,7 @@ export const RunwayBF: React.FC<{ glass?: boolean }> = ({ glass = false }) => {
       )}
 
       {/* Passwort-Seite kurz als Handy-Screenshot */}
-      {shot > 0 && (
+      {!outro && shot > 0 && (
         <div
           style={{
             position: "absolute",
@@ -166,6 +168,13 @@ export const RunwayBF: React.FC<{ glass?: boolean }> = ({ glass = false }) => {
         >
           <Img src={staticFile("ig/passwortseite.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 0%", display: "block" }} />
         </div>
+      )}
+
+      {/* Handy-Outro: Passwort-Seite, Tipp, DM */}
+      {outro && (
+        <Sequence from={PHONE_START} durationInFrames={PHONE.len} layout="none">
+          <PhoneOutro />
+        </Sequence>
       )}
 
       {/* Sounds zu den Einblendungen */}
