@@ -66,20 +66,25 @@ const Callout: React.FC<{ from: [number, number]; elbow: [number, number]; to: [
 
 // Standbild-Moment: Hintergrund wird dunkler und weich, Model bleibt scharf (freigestellt),
 // langsames Hineinfahren, ein Lichtstreifen fährt einmal über den Tracksuit, Pfeile blenden weich ein und aus.
-const FreezeMoment: React.FC<{ len: number }> = ({ len }) => {
+type FreezeCfg = { img: string; cut: string; origin: string; hoodie: [number, number]; jogger: [number, number] };
+const FREEZE_RUNWAY: FreezeCfg = { img: "ig/cut/freeze/frame.jpg", cut: "ig/cut/freeze/cut_0000.png", origin: "1050px 1050px", hoodie: [1075, 450], jogger: [1005, 770] };
+const FREEZE_DRONE: FreezeCfg = { img: "ig/drone_freeze.png", cut: "ig/cut/drone/cut_0000.png", origin: "1230px 700px", hoodie: [1250, 280], jogger: [1165, 640] };
+const FreezeMoment: React.FC<{ len: number; cfg?: FreezeCfg }> = ({ len, cfg = FREEZE_RUNWAY }) => {
   const f = useCurrentFrame();
   const fx = interpolate(f, [0, 10, len - 10, len], [0, 1, 1, 0], clamp);
   const info = interpolate(f, [8, 20, len - 12, len - 2], [0, 1, 1, 0], clamp);
   const zoom = interpolate(f, [0, len], [1, 1.07]);
   const scan = interpolate(f, [6, 30], [-10, 110], clamp);
-  const cut = staticFile("ig/cut/freeze/cut_0000.png");
+  const cut = staticFile(cfg.cut);
+  const [hx, hy] = cfg.hoodie;
+  const [jx, jy] = cfg.jogger;
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
-      <AbsoluteFill style={{ transform: `scale(${zoom})`, transformOrigin: "1050px 1050px" }}>
-        <Img src={staticFile("ig/cut/freeze/frame.jpg")} style={full} />
+      <AbsoluteFill style={{ transform: `scale(${zoom})`, transformOrigin: cfg.origin }}>
+        <Img src={staticFile(cfg.img)} style={full} />
         {/* Hintergrund: dunkler und weich */}
         <Img
-          src={staticFile("ig/cut/freeze/frame.jpg")}
+          src={staticFile(cfg.img)}
           style={{ ...full, position: "absolute", inset: 0, filter: "blur(6px) brightness(0.62) saturate(0.85)", opacity: fx }}
         />
         <AbsoluteFill style={{ background: "radial-gradient(ellipse 55% 75% at 55% 60%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%)", opacity: fx }} />
@@ -97,13 +102,13 @@ const FreezeMoment: React.FC<{ len: number }> = ({ len }) => {
         />
         {/* Pfeile und Preise */}
         <AbsoluteFill style={{ opacity: info }}>
-          <Callout from={[1075, 450]} elbow={[1300, 350]} to={[1420, 350]} />
-          <div style={{ position: "absolute", left: 1436, top: 350, transform: "translateY(-50%)" }}>
+          <Callout from={[hx, hy]} elbow={[hx + 225, hy - 100]} to={[hx + 345, hy - 100]} />
+          <div style={{ position: "absolute", left: hx + 361, top: hy - 100, transform: "translateY(-50%)" }}>
             <div style={label(18)}>Hoodie</div>
             <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>39 €</div>
           </div>
-          <Callout from={[1005, 770]} elbow={[770, 700]} to={[650, 700]} />
-          <div style={{ position: "absolute", right: 1920 - 634, top: 700, transform: "translateY(-50%)", textAlign: "right" }}>
+          <Callout from={[jx, jy]} elbow={[jx - 235, jy - 70]} to={[jx - 355, jy - 70]} />
+          <div style={{ position: "absolute", right: 1920 - (jx - 371), top: jy - 70, transform: "translateY(-50%)", textAlign: "right" }}>
             <div style={label(18)}>Jogger</div>
             <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>30 €</div>
           </div>
@@ -196,9 +201,22 @@ const TrackMoment: React.FC<{ drone: boolean; ramp: boolean }> = ({ drone, ramp 
   );
 };
 
-export const RunwayClean: React.FC<{ freeze?: boolean; track?: boolean; drone?: boolean; ramp?: boolean }> = ({ freeze = false, track: trackMode = false, drone = false, ramp = false }) => {
+// V4: Drohnen-Einschub beim grauen Look. Runway-Anfang, Drohne fliegt heran (1,6x), Standbild von oben mit Preisen,
+// Drohne zieht schnell weg (2,4x, Bewegungsunschärfe), zurück in den Runway-Film. Drohne farblich an den Film angepasst.
+const DRONE_SEGS: Seg[] = [
+  { src: 0, len: 30 },
+  { src: 0, len: 37, file: "ig/d_in.mp4" },
+  { src: 0, len: 55, freeze: true },
+  { src: 0, len: 19, file: "ig/d_out.mp4" },
+];
+
+export const RunwayClean: React.FC<{ freeze?: boolean; track?: boolean; drone?: boolean; ramp?: boolean; droneCut?: boolean }> = ({ freeze = false, track: trackMode = false, drone = false, ramp = false, droneCut = false }) => {
   const frame = useCurrentFrame();
-  const segs = ramp ? [{ src: 0, len: RAMP_LEN, file: "ig/ramp.mp4" } as Seg, ...segments(false).slice(1)] : segments(freeze);
+  const segs = droneCut
+    ? [...DRONE_SEGS, ...segments(false).slice(1)]
+    : ramp
+      ? [{ src: 0, len: RAMP_LEN, file: "ig/ramp.mp4" } as Seg, ...segments(false).slice(1)]
+      : segments(freeze);
   let t = 0;
   const placed = segs.map((s) => {
     const p = { ...s, at: t };
@@ -219,7 +237,7 @@ export const RunwayClean: React.FC<{ freeze?: boolean; track?: boolean; drone?: 
       {placed.map((p, i) => (
         <Sequence key={i} from={p.at} durationInFrames={p.len}>
           {p.freeze ? (
-            <FreezeMoment len={p.len} />
+            <FreezeMoment len={p.len} cfg={droneCut ? FREEZE_DRONE : FREEZE_RUNWAY} />
           ) : (
             <OffthreadVideo src={staticFile(p.file ?? SRC)} startFrom={p.file ? 0 : p.src} muted toneMapped={false} style={full} />
           )}
@@ -246,6 +264,19 @@ export const RunwayClean: React.FC<{ freeze?: boolean; track?: boolean; drone?: 
         <Sequence from={freezeSeg.at} durationInFrames={8} layout="none">
           <Audio src={staticFile("sfx/click.wav")} volume={0.3} />
         </Sequence>
+      )}
+      {droneCut && freezeSeg && (
+        <>
+          <Sequence from={freezeSeg.at + 5} durationInFrames={24} layout="none">
+            <Audio src={staticFile("sfx/scan_soft.wav")} volume={0.22} />
+          </Sequence>
+          <Sequence from={30} durationInFrames={18} layout="none">
+            <Audio src={staticFile("sfx/whoosh_soft.wav")} volume={0.12} />
+          </Sequence>
+          <Sequence from={freezeSeg.at + freezeSeg.len} durationInFrames={18} layout="none">
+            <Audio src={staticFile("sfx/whoosh_soft.wav")} volume={0.14} />
+          </Sequence>
+        </>
       )}
 
       {/* Ende: Handy-Outro und dezente Angebots-Infos */}

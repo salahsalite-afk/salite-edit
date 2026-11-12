@@ -40,5 +40,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="RunwayTrack" component={RunwayClean} defaultProps={{ freeze: false, track: true, drone: true, ramp: false }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
     {/* markierte V3 ohne Drohne: Scan-Sound und Zeitlupen-Rampe */}
     <Composition id="RunwayTrackRamp" component={RunwayClean} defaultProps={{ freeze: false, track: true, drone: false, ramp: true }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
+    {/* V4: Drohnen-Einschub beim grauen Look mit Standbild von oben */}
+    <Composition id="RunwayDrone" component={RunwayClean} defaultProps={{ freeze: true, track: false, drone: false, ramp: false, droneCut: true }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
   </>
 );
