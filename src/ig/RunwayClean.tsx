@@ -54,6 +54,14 @@ const label = (size: number, weight = 600): React.CSSProperties => ({
   textShadow: SHADOW,
 });
 
+// Preis mit altem Preis, klein und durchgestrichen in Rot
+const Price: React.FC<{ old: string; now: string; align?: "left" | "right" }> = ({ old, now, align = "left" }) => (
+  <div style={{ display: "flex", alignItems: "baseline", gap: 12, justifyContent: align === "right" ? "flex-end" : "flex-start", marginTop: 4 }}>
+    <span style={{ ...label(24, 600), letterSpacing: "0.04em", color: "#FF3B30", textDecoration: "line-through", textDecorationThickness: 2 }}>{old}</span>
+    <span style={{ ...label(34, 700), letterSpacing: "0.06em" }}>{now}</span>
+  </div>
+);
+
 // Feiner Hinweis-Pfeil wie in einem Lookbook: Punkt auf dem Kleidungsstück, Linie zum Text
 const Callout: React.FC<{ from: [number, number]; elbow: [number, number]; to: [number, number] }> = ({ from, elbow, to }) => (
   <svg width={1920} height={1080} style={{ position: "absolute", inset: 0 }}>
@@ -105,12 +113,12 @@ const FreezeMoment: React.FC<{ len: number; cfg?: FreezeCfg }> = ({ len, cfg = F
           <Callout from={[hx, hy]} elbow={[hx + 225, hy - 100]} to={[hx + 345, hy - 100]} />
           <div style={{ position: "absolute", left: hx + 361, top: hy - 100, transform: "translateY(-50%)" }}>
             <div style={label(18)}>Hoodie</div>
-            <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>39 €</div>
+            <Price old="80 €" now="39 €" />
           </div>
           <Callout from={[jx, jy]} elbow={[jx - 235, jy - 70]} to={[jx - 355, jy - 70]} />
           <div style={{ position: "absolute", right: 1920 - (jx - 371), top: jy - 70, transform: "translateY(-50%)", textAlign: "right" }}>
             <div style={label(18)}>Jogger</div>
-            <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>30 €</div>
+            <Price old="70 €" now="30 €" align="right" />
           </div>
         </AbsoluteFill>
       </AbsoluteFill>
@@ -185,12 +193,12 @@ const TrackMoment: React.FC<{ drone: boolean; ramp: boolean }> = ({ drone, ramp 
         <Callout from={[hx, hy]} elbow={[hx + 200, hy - 100]} to={[hx + 320, hy - 100]} />
         <div style={{ position: "absolute", left: hx + 336, top: hy - 100, transform: "translateY(-50%)" }}>
           <div style={label(18)}>Hoodie</div>
-          <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>39 €</div>
+          <Price old="80 €" now="39 €" />
         </div>
         <Callout from={[jx, jy]} elbow={[jx - 230, jy - 70]} to={[jx - 350, jy - 70]} />
         <div style={{ position: "absolute", right: 1920 - (jx - 366), top: jy - 70, transform: "translateY(-50%)", textAlign: "right" }}>
           <div style={label(18)}>Jogger</div>
-          <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>30 €</div>
+          <Price old="70 €" now="30 €" align="right" />
         </div>
       </AbsoluteFill>
       <div style={{ position: "absolute", left: 250, top: 150, opacity: info }}>
@@ -205,7 +213,7 @@ const TrackMoment: React.FC<{ drone: boolean; ramp: boolean }> = ({ drone, ramp 
 // Drohne zieht schnell weg (2,4x, Bewegungsunschärfe), zurück in den Runway-Film. Drohne farblich an den Film angepasst.
 const DRONE_SEGS: Seg[] = [
   { src: 0, len: 30 },
-  { src: 0, len: 37, file: "ig/d_in.mp4" },
+  { src: 0, len: 86, file: "ig/d_in2.mp4" }, // ab 20,0 s: er läuft noch, bleibt stehen, zieht die Kapuze ab
   { src: 0, len: 55, freeze: true },
   { src: 0, len: 19, file: "ig/d_out.mp4" },
 ];
@@ -267,8 +275,8 @@ export const RunwayClean: React.FC<{ freeze?: boolean; track?: boolean; drone?: 
       )}
       {droneCut && freezeSeg && (
         <>
-          <Sequence from={freezeSeg.at + 5} durationInFrames={24} layout="none">
-            <Audio src={staticFile("sfx/scan_soft.wav")} volume={0.22} />
+          <Sequence from={freezeSeg.at + 5} durationInFrames={36} layout="none">
+            <Audio src={staticFile("sfx/scan_beep.wav")} volume={0.2} />
           </Sequence>
           <Sequence from={30} durationInFrames={18} layout="none">
             <Audio src={staticFile("sfx/whoosh_soft.wav")} volume={0.12} />
