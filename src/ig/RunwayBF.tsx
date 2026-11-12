@@ -1,3 +1,4 @@
+import { GlassText } from "./GlassText";
 import { AbsoluteFill, Audio, continueRender, delayRender, Freeze, Img, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 
 // Runway-Film Vollbild 16:9 ohne Titel "SALITE RUNWAY" und ohne Tanktop-Look.
@@ -48,7 +49,7 @@ loadAnton();
 const pad = (n: number) => String(n).padStart(4, "0");
 const full: React.CSSProperties = { width: "100%", height: "100%" };
 
-export const RunwayBF: React.FC = () => {
+export const RunwayBF: React.FC<{ glass?: boolean }> = ({ glass = false }) => {
   const frame = useCurrentFrame();
   const textScale = interpolate(frame, [0, 30], [1.04, 1], { extrapolateRight: "clamp" });
   const showText = frame < TEXT_END;
@@ -83,7 +84,13 @@ export const RunwayBF: React.FC = () => {
         </Freeze>
       </Sequence>
 
-      {showText && (
+      {showText && glass && (
+        <GlassText id="g1" scale={textScale} lines={[
+          { parts: [{ t: "BLACK FRIDAY" }], size: 290, cy: 338 },
+          { parts: [{ t: "TRACKIE " }, { t: PREIS, red: true }], size: 290, cy: 622 },
+        ]} />
+      )}
+      {showText && !glass && (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
           <div style={{ textAlign: "center", transform: `scale(${textScale})`, marginTop: -60, fontFamily: "'Anton', sans-serif", lineHeight: 0.98, color: "#111111" }}>
             <div style={{ fontSize: 290, letterSpacing: "0.01em" }}>BLACK FRIDAY</div>
@@ -94,7 +101,13 @@ export const RunwayBF: React.FC = () => {
         </AbsoluteFill>
       )}
 
-      {showT2 && (
+      {showT2 && glass && frame < T2_SWITCH && (
+        <GlassText id="g2" lines={[
+          { parts: [{ t: "BIGGEST SALE" }], size: 260, cy: 353 },
+          { parts: [{ t: "IN GERMANY" }], size: 260, cy: 607 },
+        ]} />
+      )}
+      {showT2 && !glass && (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
           <div style={{ textAlign: "center", marginTop: -60, fontFamily: "'Anton', sans-serif", lineHeight: 0.98, color: "#111111" }}>
             {frame < T2_SWITCH && (
@@ -111,7 +124,13 @@ export const RunwayBF: React.FC = () => {
       {(showText || showT2) && cut && <Img src={staticFile(cut)} style={{ position: "absolute", inset: 0, ...full }} />}
 
       {/* UP TO 80% vor dem Model, damit die Zahl voll lesbar ist */}
-      {showT2 && frame >= T2_SWITCH && (
+      {showT2 && glass && frame >= T2_SWITCH && (
+        <GlassText id="g3" lines={[
+          { parts: [{ t: "UP TO" }], size: 230, cy: 299 },
+          { parts: [{ t: "80%", red: true }], size: 380, cy: 589 },
+        ]} />
+      )}
+      {showT2 && !glass && frame >= T2_SWITCH && (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
           <div style={{ textAlign: "center", marginTop: -60, fontFamily: "'Anton', sans-serif", lineHeight: 0.95, color: "#111111" }}>
             <div style={{ fontSize: 230 }}>UP TO</div>
