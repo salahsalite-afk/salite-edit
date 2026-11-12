@@ -35,7 +35,8 @@ export const RemotionRoot: React.FC = () => (
     {/* gleiche Version mit Glas-Schrift */}
     <Composition id="RunwayBFGlass" component={RunwayBF} defaultProps={{ glass: true, outro: true }} fps={RBF.fps} width={RBF.width} height={RBF.height} durationInFrames={RBF.frames} />
     {/* Version 1 clean (Geschäftspartner) und Version 2 mit Standbild-Preisen */}
-    <Composition id="RunwayClean" component={RunwayClean} defaultProps={{ freeze: false }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
-    <Composition id="RunwayFreeze" component={RunwayClean} defaultProps={{ freeze: true }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
+    <Composition id="RunwayClean" component={RunwayClean} defaultProps={{ freeze: false, track: false }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
+    <Composition id="RunwayFreeze" component={RunwayClean} defaultProps={{ freeze: true, track: false }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
+    <Composition id="RunwayTrack" component={RunwayClean} defaultProps={{ freeze: false, track: true }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
   </>
 );

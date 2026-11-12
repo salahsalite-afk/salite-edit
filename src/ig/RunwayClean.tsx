@@ -1,5 +1,6 @@
 import { AbsoluteFill, Audio, continueRender, delayRender, Freeze, Img, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { PHONE, PhoneOutro } from "./PhoneOutro";
+import track from "./track_grey.json";
 
 // Runway-Film Vollbild 16:9, ohne Titel und ohne Tanktop-Look, Musik ungeschnitten.
 // Version 1 (clean): kein Text im Film, am Ende Handy-Outro mit dezenten Angebots-Infos.
@@ -116,7 +117,62 @@ const FreezeMoment: React.FC<{ len: number }> = ({ len }) => {
   );
 };
 
-export const RunwayClean: React.FC<{ freeze?: boolean }> = ({ freeze = false }) => {
+// Verfolgen statt Stoppen: Model läuft weiter (Quelle 5 bis 50), Fokus-Effekt und Preise wandern mit.
+const TRACK_IN = 5;
+const TRACK_OUT = 51;
+type TP = { hoodie: [number, number]; jogger: [number, number] };
+const TrackMoment: React.FC = () => {
+  const f = useCurrentFrame();
+  const src = Math.min(TRACK_OUT - 1, Math.max(0, f));
+  const tp = (track as unknown as TP[])[src];
+  const fx = interpolate(f, [TRACK_IN, TRACK_IN + 8, TRACK_OUT - 8, TRACK_OUT], [0, 1, 1, 0], clamp);
+  const info = interpolate(f, [TRACK_IN + 6, TRACK_IN + 16, TRACK_OUT - 10, TRACK_OUT - 2], [0, 1, 1, 0], clamp);
+  const scan = interpolate(f, [TRACK_IN + 4, TRACK_IN + 26], [-10, 110], clamp);
+  const cut = staticFile(`ig/cut/a/cut_${String(src).padStart(4, "0")}.png`);
+  if (f < TRACK_IN || f >= TRACK_OUT) return null;
+  const [hx, hy] = tp.hoodie;
+  const [jx, jy] = tp.jogger;
+  return (
+    <AbsoluteFill>
+      {/* Hintergrund dunkler und weich: unscharfe, abgedunkelte Kopie des laufenden Bilds */}
+      <AbsoluteFill style={{ opacity: fx }}>
+        <OffthreadVideo src={staticFile(SRC)} startFrom={0} muted toneMapped={false} style={{ ...full, filter: "blur(6px) brightness(0.62) saturate(0.85)" }} />
+      </AbsoluteFill>
+      <AbsoluteFill style={{ background: "radial-gradient(ellipse 55% 75% at 52% 58%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%)", opacity: fx }} />
+      {/* Model scharf obenauf */}
+      <Img src={cut} style={{ ...full, position: "absolute", inset: 0, opacity: fx }} />
+      <AbsoluteFill
+        style={{
+          WebkitMaskImage: `url(${cut})`,
+          maskImage: `url(${cut})`,
+          WebkitMaskSize: "100% 100%",
+          maskSize: "100% 100%",
+          background: `linear-gradient(180deg, rgba(255,255,255,0) ${scan - 8}%, rgba(255,255,255,0.35) ${scan}%, rgba(255,255,255,0) ${scan + 8}%)`,
+          opacity: fx,
+        }}
+      />
+      {/* Pfeile und Preise wandern mit */}
+      <AbsoluteFill style={{ opacity: info }}>
+        <Callout from={[hx, hy]} elbow={[hx + 200, hy - 100]} to={[hx + 320, hy - 100]} />
+        <div style={{ position: "absolute", left: hx + 336, top: hy - 100, transform: "translateY(-50%)" }}>
+          <div style={label(18)}>Hoodie</div>
+          <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>39 €</div>
+        </div>
+        <Callout from={[jx, jy]} elbow={[jx - 230, jy - 70]} to={[jx - 350, jy - 70]} />
+        <div style={{ position: "absolute", right: 1920 - (jx - 366), top: jy - 70, transform: "translateY(-50%)", textAlign: "right" }}>
+          <div style={label(18)}>Jogger</div>
+          <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>30 €</div>
+        </div>
+      </AbsoluteFill>
+      <div style={{ position: "absolute", left: 250, top: 150, opacity: info }}>
+        <div style={label(20)}>Black Friday Deal</div>
+        <div style={{ ...label(46, 700), letterSpacing: "0.06em", marginTop: 10 }}>69 € Trackie</div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+export const RunwayClean: React.FC<{ freeze?: boolean; track?: boolean }> = ({ freeze = false, track: trackMode = false }) => {
   const frame = useCurrentFrame();
   const segs = segments(freeze);
   let t = 0;
@@ -151,6 +207,12 @@ export const RunwayClean: React.FC<{ freeze?: boolean }> = ({ freeze = false }) 
         </Freeze>
       </Sequence>
 
+      {trackMode && <TrackMoment />}
+      {trackMode && (
+        <Sequence from={TRACK_IN} durationInFrames={8} layout="none">
+          <Audio src={staticFile("sfx/click.wav")} volume={0.3} />
+        </Sequence>
+      )}
       {freezeSeg && (
         <Sequence from={freezeSeg.at} durationInFrames={8} layout="none">
           <Audio src={staticFile("sfx/click.wav")} volume={0.3} />
