@@ -36,3 +36,9 @@ Kunden-Feedback während der Arbeit und neue Regeln:
 1. Grau und Schwarz sind die meistverkauften Tracksuits. Sie stehen immer im Vordergrund: größer, mit Label BESTSELLER, auf der Schlusskarte als große Abzüge.
 2. Für Sale-Posts mehr Streetwear, moderner, heller, weniger elegant: heller Hintergrund, kräftige Schrift (Anton für Schlagzeilen, Inter für Labels), Preis und Rabatt in Rot. Das ist die Sale-Variante; der elegante SALITE Look bleibt für Marken-Inhalte.
 3. Instagram ist exklusiver als TikTok, aber Sale-Kommunikation muss trotzdem sofort ins Auge springen.
+
+Feedback zur ersten Fassung (12.11.2026) und neue Regeln:
+4. Rahmen-Vorlagen um einen fertigen Film zerstören ihn: Der Fit und die Schuhe sind nicht mehr richtig zu sehen. Fertige Kampagnenfilme bleiben im Vollbild in ihrem Originalformat, ohne Rahmen. Text höchstens ganz dezent im Bild, an einer freien Stelle (z. B. links mittig auf der Wand), erst nach einem Filmtitel.
+5. Nicht passende Looks werden ganz herausgeschnitten (hier: Model im weißen Tanktop, zu wenig seriös für den Film). Die Musik läuft dabei ungeschnitten weiter; die entstandene Lücke füllt das stehende Endbild.
+6. Varianten pro Plattform liefern: Instagram plain ohne Text, Instagram mit dezentem Text und DM-Aufruf ("Schreib uns per DM: Ich brauch ein Passwort"), TikTok nur mit "Black Friday" und Preis.
+7. Preis im Runway-Film laut Kunde: Tracksuit 60 €.

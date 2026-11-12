@@ -1,6 +1,7 @@
 import { Composition } from "remotion";
 import { Main, OUTRO_FRAMES } from "./Main";
 import { IG, IG_FRAMES, Instagram } from "./ig/Instagram";
+import { Runway, RW } from "./ig/Runway";
 
 // Werte exakt aus ffprobe von public/video.mp4:
 // HEVC 2160x3840 (9:16), 60 fps, 78,227 s, bt709 SDR
@@ -23,5 +24,9 @@ export const RemotionRoot: React.FC = () => (
     />
     {/* Instagram-Post Black Friday: RED-Runway-Film im 4:5 Rahmen */}
     <Composition id="Instagram" component={Instagram} fps={IG.fps} width={IG.width} height={IG.height} durationInFrames={IG_FRAMES} />
+    {/* Runway-Film Vollbild 16:9 ohne Tanktop-Look, Musik ungeschnitten */}
+    <Composition id="RunwayPlain" component={Runway} defaultProps={{ variant: "plain" as const }} fps={RW.fps} width={RW.width} height={RW.height} durationInFrames={RW.frames} />
+    <Composition id="RunwayInsta" component={Runway} defaultProps={{ variant: "insta" as const }} fps={RW.fps} width={RW.width} height={RW.height} durationInFrames={RW.frames} />
+    <Composition id="RunwayTikTok" component={Runway} defaultProps={{ variant: "tiktok" as const }} fps={RW.fps} width={RW.width} height={RW.height} durationInFrames={RW.frames} />
   </>
 );
