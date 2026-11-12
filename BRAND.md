@@ -19,3 +19,6 @@ Color Grading: noch offen (`salite-brand` erarbeitet einen Vorschlag).
 
 ## Formate
 - "Beim Therapeuten" (Video 1)
+
+## Verkaufsprinzip
+Exklusivität über Passwort-Drops: Kommentar, DM, Registrierung, Passwort am Drop-Tag, Kauf. Erste Kampagne: Black Week ab 27.11.2026 (`KAMPAGNE_BLACK_WEEK.md`).

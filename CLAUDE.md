@@ -3,6 +3,10 @@
 Diese Datei liegt im Projektordner. Claude Code liest sie bei jedem Start und schneidet danach.
 Sie beschreibt, wie ein SALITE Video aussieht, klingt und sich bewegt.
 
+## 0. Aktive Kampagne
+
+Bis Ende der Black Week gilt `KAMPAGNE_BLACK_WEEK.md`: jedes Video, jede Story und jede Recherche dient dem Passwort-Drop am 27.11.2026.
+
 ## 1. Haltung
 
 Ruhig, teuer, sicher. Das Video erklärt nichts hektisch, es zeigt.
@@ -141,7 +145,7 @@ Wenn `sfx/` leer ist: die Standard Sounds selbst mit ffmpeg erzeugen (tiefer Sin
 4. Nach jedem Render kurz auflisten, was sich geändert hat.
 5. Fehlende Fonts, Sounds, Clips oder Zahlen nie erfinden. Nachfragen.
 6. Was der Kunde sagt, wird genau so umgesetzt. Zahlen und Preise exakt übernehmen, nichts selbst herleiten oder ergänzen. Nur nachfragen, wenn etwas wirklich fehlt; nicht dieselbe Sache mehrfach.
-7. Vor jedem neuen Video `LEARNINGS.md` und `BRAND.md` lesen. Nach jedem Kunden-Feedback dort eintragen, was gelernt wurde, und die Regeln hier anpassen.
+7. Vor jedem neuen Video `LEARNINGS.md`, `BRAND.md` und die aktive Kampagne lesen. Nach jedem Kunden-Feedback dort eintragen, was gelernt wurde, und die Regeln hier anpassen.
 8. Ablauf mit den Agenten in `.claude/agents/` (siehe Abschnitt 10).
 
 ## 10. Agenten-Team

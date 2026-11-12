@@ -25,3 +25,4 @@ Fakten zur Marke:
 - 12.11.2026: Agenten `salite-creative-director`, `salite-brand`, `salite-instagram` und `salite-evolver` angelegt, `BRAND.md` begonnen (Wunsch des Kunden: Kritik und Ideen, Nische und Grading, Instagram-Storys und Dumps zur Customer Journey, ständige Weiterentwicklung).
 - 12.11.2026: `salite-trendscout` angelegt (täglicher Trendbericht in `trends/`). `salite-evolver` setzt die stärksten Funde jetzt selbstständig um (Wunsch des Kunden), außer Qualitätsregeln, Look und Markenfakten.
 - 12.11.2026: `salite-orchestrator` angelegt (Wunsch des Kunden): entscheidet selbstständig über neue, ersetzte und archivierte Agenten, Wettbewerb über Herausforderer, Bündnisse in `agents/ALLIANZEN.md`, Noten in `agents/SCOREBOARD.md`. Höchstens 15 aktive Agenten, Archiv statt Löschen.
+- 12.11.2026: Aktive Kampagne `KAMPAGNE_BLACK_WEEK.md` angelegt (Passwort-Drop, Tracksuit 69 €, Start 27.11.2026). Alle Agenten richten sich danach aus.
