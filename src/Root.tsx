@@ -37,6 +37,8 @@ export const RemotionRoot: React.FC = () => (
     {/* Version 1 clean (Geschäftspartner) und Version 2 mit Standbild-Preisen */}
     <Composition id="RunwayClean" component={RunwayClean} defaultProps={{ freeze: false, track: false }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
     <Composition id="RunwayFreeze" component={RunwayClean} defaultProps={{ freeze: true, track: false }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
-    <Composition id="RunwayTrack" component={RunwayClean} defaultProps={{ freeze: false, track: true }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
+    <Composition id="RunwayTrack" component={RunwayClean} defaultProps={{ freeze: false, track: true, drone: true, ramp: false }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
+    {/* markierte V3 ohne Drohne: Scan-Sound und Zeitlupen-Rampe */}
+    <Composition id="RunwayTrackRamp" component={RunwayClean} defaultProps={{ freeze: false, track: true, drone: false, ramp: true }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
   </>
 );

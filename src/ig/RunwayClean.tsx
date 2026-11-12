@@ -117,32 +117,55 @@ const FreezeMoment: React.FC<{ len: number }> = ({ len }) => {
   );
 };
 
-// Verfolgen statt Stoppen: Model läuft weiter (Quelle 5 bis 50), Fokus-Effekt und Preise wandern mit.
-const TRACK_IN = 2; // etwas früher als zuvor (5), damit der Effekt länger steht
-const TRACK_OUT = 51;
+// Verfolgen statt Stoppen: Model läuft weiter, Fokus-Effekt und Preise wandern mit.
+// drone: Hintergrund ist der Drohnenflug. ramp: Zeitlupe während der Preise, dann kurz schnell, dann normal.
+const TRACK_IN = 2;
+const RAMP_LEN = 86; // ramp.mp4: Quelle 0-7 normal (8), 8-37 Zeitlupe (71), 38-50 doppelt schnell (7)
 type TP = { hoodie: [number, number]; jogger: [number, number] };
-const TrackMoment: React.FC = () => {
+const rampToSrc = (k: number) => (k < 8 ? k : k < 79 ? 8 + ((k - 8) * 30) / 71 : 38 + ((k - 79) * 13) / 7);
+const anchorAt = (pos: number): TP => {
+  const T = track as unknown as TP[];
+  const i = Math.max(0, Math.min(T.length - 1, Math.floor(pos)));
+  const j = Math.min(T.length - 1, i + 1);
+  const t = Math.max(0, Math.min(1, pos - i));
+  const mix = (a: [number, number], c: [number, number]): [number, number] => [a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t];
+  return { hoodie: mix(T[i].hoodie, T[j].hoodie), jogger: mix(T[i].jogger, T[j].jogger) };
+};
+
+const TrackMoment: React.FC<{ drone: boolean; ramp: boolean }> = ({ drone, ramp }) => {
   const f = useCurrentFrame();
-  const src = Math.min(TRACK_OUT - 1, Math.max(0, f));
-  const tp = (track as unknown as TP[])[src];
-  const fx = interpolate(f, [TRACK_IN, TRACK_IN + 7, TRACK_OUT - 5, TRACK_OUT], [0, 1, 1, 0], clamp);
-  const info = interpolate(f, [TRACK_IN + 5, TRACK_IN + 14, TRACK_OUT - 6, TRACK_OUT - 1], [0, 1, 1, 0], clamp);
-  const scan = interpolate(f, [TRACK_IN + 5, TRACK_IN + 30], [-10, 110], clamp);
-  const cut = staticFile(`ig/cut/a/cut_${String(src).padStart(4, "0")}.png`);
-  if (f < TRACK_IN || f >= TRACK_OUT) return null;
+  const OUT_ = ramp ? RAMP_LEN : 51;
+  const k = Math.min(OUT_ - 1, Math.max(0, f));
+  const tp = anchorAt(ramp ? rampToSrc(k) : k);
+  const fx = interpolate(f, [TRACK_IN, TRACK_IN + 7, OUT_ - 5, OUT_], [0, 1, 1, 0], clamp);
+  const info = interpolate(f, [TRACK_IN + 5, TRACK_IN + 14, OUT_ - (ramp ? 9 : 6), OUT_ - (ramp ? 4 : 1)], [0, 1, 1, 0], clamp);
+  const scan = interpolate(f, [TRACK_IN + 5, TRACK_IN + (ramp ? 45 : 30)], [-10, 110], clamp);
+  const cut = staticFile(`ig/cut/${ramp ? "ramp" : "a"}/cut_${String(k).padStart(4, "0")}.png`);
+  if (f < TRACK_IN || f >= OUT_) return null;
   const [hx, hy] = tp.hoodie;
   const [jx, jy] = tp.jogger;
   return (
     <AbsoluteFill>
-      {/* Hintergrund: Drohnenflug durchs Studio, dunkel und weich (die Welt bewegt sich, der Fokus bleibt auf dem Model) */}
       <AbsoluteFill style={{ opacity: fx }}>
-        <Sequence from={TRACK_IN} layout="none">
-          <OffthreadVideo src={staticFile("ig/drone_bg.mp4")} muted toneMapped={false} style={{ ...full, filter: "blur(3px) brightness(0.48) saturate(0.8)" }} />
-        </Sequence>
+        {drone ? (
+          // Drohnenflug durchs Studio, dunkel und weich
+          <Sequence from={TRACK_IN} layout="none">
+            <OffthreadVideo src={staticFile("ig/drone_bg.mp4")} muted toneMapped={false} style={{ ...full, filter: "blur(3px) brightness(0.48) saturate(0.8)" }} />
+          </Sequence>
+        ) : (
+          // eigenes Bild, dunkler und weich (Look der markierten V3)
+          <OffthreadVideo src={staticFile(ramp ? "ig/ramp.mp4" : SRC)} startFrom={0} muted toneMapped={false} style={{ ...full, filter: "blur(6px) brightness(0.62) saturate(0.85)" }} />
+        )}
       </AbsoluteFill>
-      <AbsoluteFill style={{ background: "radial-gradient(ellipse 50% 70% at 52% 58%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.6) 100%)", opacity: fx }} />
-      {/* Model scharf und etwas heller obenauf */}
-      <Img src={cut} style={{ ...full, position: "absolute", inset: 0, opacity: fx, filter: "brightness(1.08) contrast(1.03)" }} />
+      <AbsoluteFill
+        style={{
+          background: drone
+            ? "radial-gradient(ellipse 50% 70% at 52% 58%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.6) 100%)"
+            : "radial-gradient(ellipse 55% 75% at 52% 58%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%)",
+          opacity: fx,
+        }}
+      />
+      <Img src={cut} style={{ ...full, position: "absolute", inset: 0, opacity: fx, filter: drone ? "brightness(1.08) contrast(1.03)" : undefined }} />
       <AbsoluteFill
         style={{
           WebkitMaskImage: `url(${cut})`,
@@ -153,7 +176,6 @@ const TrackMoment: React.FC = () => {
           opacity: fx,
         }}
       />
-      {/* Pfeile und Preise wandern mit */}
       <AbsoluteFill style={{ opacity: info }}>
         <Callout from={[hx, hy]} elbow={[hx + 200, hy - 100]} to={[hx + 320, hy - 100]} />
         <div style={{ position: "absolute", left: hx + 336, top: hy - 100, transform: "translateY(-50%)" }}>
@@ -174,9 +196,9 @@ const TrackMoment: React.FC = () => {
   );
 };
 
-export const RunwayClean: React.FC<{ freeze?: boolean; track?: boolean }> = ({ freeze = false, track: trackMode = false }) => {
+export const RunwayClean: React.FC<{ freeze?: boolean; track?: boolean; drone?: boolean; ramp?: boolean }> = ({ freeze = false, track: trackMode = false, drone = false, ramp = false }) => {
   const frame = useCurrentFrame();
-  const segs = segments(freeze);
+  const segs = ramp ? [{ src: 0, len: RAMP_LEN, file: "ig/ramp.mp4" } as Seg, ...segments(false).slice(1)] : segments(freeze);
   let t = 0;
   const placed = segs.map((s) => {
     const p = { ...s, at: t };
@@ -209,15 +231,15 @@ export const RunwayClean: React.FC<{ freeze?: boolean; track?: boolean }> = ({ f
         </Freeze>
       </Sequence>
 
-      {trackMode && <TrackMoment />}
+      {trackMode && <TrackMoment drone={drone} ramp={ramp} />}
       {trackMode && (
         <Sequence from={TRACK_IN} durationInFrames={8} layout="none">
           <Audio src={staticFile("sfx/click.wav")} volume={0.3} />
         </Sequence>
       )}
       {trackMode && (
-        <Sequence from={TRACK_IN + 5} durationInFrames={24} layout="none">
-          <Audio src={staticFile("sfx/scan_soft.wav")} volume={0.22} />
+        <Sequence from={TRACK_IN + 5} durationInFrames={ramp ? 40 : 24} layout="none">
+          <Audio src={staticFile("sfx/scan_soft.wav")} volume={0.22} playbackRate={ramp ? 0.6 : 1} />
         </Sequence>
       )}
       {freezeSeg && (
