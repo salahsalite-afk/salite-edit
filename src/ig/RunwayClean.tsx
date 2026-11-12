@@ -1,18 +1,26 @@
-import { AbsoluteFill, Audio, continueRender, delayRender, Freeze, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, continueRender, delayRender, Freeze, Img, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { PHONE, PhoneOutro } from "./PhoneOutro";
 
 // Runway-Film Vollbild 16:9, ohne Titel und ohne Tanktop-Look, Musik ungeschnitten.
 // Version 1 (clean): kein Text im Film, am Ende Handy-Outro mit dezenten Angebots-Infos.
 // Version 2 (freeze): zusätzlich am Anfang ein Standbild des grauen Tracksuits mit feinen Pfeilen und Preisen.
 export const RC = { fps: 25, width: 1920, height: 1080, frames: 938 };
+// Zeitfenster des Standbilds in Sekunden (für den dunklen, leiseren Musik-Fokus im Mix)
+export const FOCUS_SEC = [9 / 25, (9 + 55) / 25];
 const SRC = "ig/source.mov";
-const FREEZE_AT = 22; // Quell-Frame: grauer Tracksuit frontal, bester Fit
-const FREEZE_LEN = 45; // 1,8 s
+const FREEZE_LEN = 55; // 2,2 s Standbild (Quell-Frame 5: ganzer Fit mit Schuhen und Stack)
+const SLOW_IN = 9; // Zeitlupe in das Standbild (Quelle 0 bis 5, interpoliert)
+const SLOW_OUT = 14; // Zeitlupe aus dem Standbild (Quelle 5 bis 12, interpoliert)
 
-type Seg = { src: number; len: number; freeze?: boolean };
+type Seg = { src: number; len: number; freeze?: boolean; file?: string };
 const segments = (freeze: boolean): Seg[] => [
   ...(freeze
-    ? [{ src: 0, len: FREEZE_AT + 1 }, { src: FREEZE_AT, len: FREEZE_LEN, freeze: true }, { src: FREEZE_AT + 1, len: 51 - FREEZE_AT - 1 }]
+    ? [
+        { src: 0, len: SLOW_IN, file: "ig/slow_in.mp4" },
+        { src: 5, len: FREEZE_LEN, freeze: true },
+        { src: 0, len: SLOW_OUT, file: "ig/slow_out.mp4" },
+        { src: 13, len: 51 - 13 },
+      ]
     : [{ src: 0, len: 51 }]),
   { src: 91, len: 602 - 91 }, // nach dem Titel bis Ende Look 3
   { src: 775, len: 163 }, // Look 5 und Endkarte
@@ -55,6 +63,59 @@ const Callout: React.FC<{ from: [number, number]; elbow: [number, number]; to: [
   </svg>
 );
 
+// Standbild-Moment: Hintergrund wird dunkler und weich, Model bleibt scharf (freigestellt),
+// langsames Hineinfahren, ein Lichtstreifen fährt einmal über den Tracksuit, Pfeile blenden weich ein und aus.
+const FreezeMoment: React.FC<{ len: number }> = ({ len }) => {
+  const f = useCurrentFrame();
+  const fx = interpolate(f, [0, 10, len - 10, len], [0, 1, 1, 0], clamp);
+  const info = interpolate(f, [8, 20, len - 12, len - 2], [0, 1, 1, 0], clamp);
+  const zoom = interpolate(f, [0, len], [1, 1.07]);
+  const scan = interpolate(f, [6, 30], [-10, 110], clamp);
+  const cut = staticFile("ig/cut/freeze/cut_0000.png");
+  return (
+    <AbsoluteFill style={{ overflow: "hidden" }}>
+      <AbsoluteFill style={{ transform: `scale(${zoom})`, transformOrigin: "1050px 1050px" }}>
+        <Img src={staticFile("ig/cut/freeze/frame.jpg")} style={full} />
+        {/* Hintergrund: dunkler und weich */}
+        <Img
+          src={staticFile("ig/cut/freeze/frame.jpg")}
+          style={{ ...full, position: "absolute", inset: 0, filter: "blur(6px) brightness(0.62) saturate(0.85)", opacity: fx }}
+        />
+        <AbsoluteFill style={{ background: "radial-gradient(ellipse 55% 75% at 55% 60%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%)", opacity: fx }} />
+        {/* Model scharf obenauf */}
+        <Img src={cut} style={{ ...full, position: "absolute", inset: 0 }} />
+        {/* Lichtstreifen nur auf dem Model */}
+        <AbsoluteFill
+          style={{
+            WebkitMaskImage: `url(${cut})`,
+            maskImage: `url(${cut})`,
+            WebkitMaskSize: "100% 100%",
+            maskSize: "100% 100%",
+            background: `linear-gradient(180deg, rgba(255,255,255,0) ${scan - 8}%, rgba(255,255,255,0.35) ${scan}%, rgba(255,255,255,0) ${scan + 8}%)`,
+          }}
+        />
+        {/* Pfeile und Preise */}
+        <AbsoluteFill style={{ opacity: info }}>
+          <Callout from={[1075, 450]} elbow={[1300, 350]} to={[1420, 350]} />
+          <div style={{ position: "absolute", left: 1436, top: 350, transform: "translateY(-50%)" }}>
+            <div style={label(18)}>Hoodie</div>
+            <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>39 €</div>
+          </div>
+          <Callout from={[1005, 770]} elbow={[770, 700]} to={[650, 700]} />
+          <div style={{ position: "absolute", right: 1920 - 634, top: 700, transform: "translateY(-50%)", textAlign: "right" }}>
+            <div style={label(18)}>Jogger</div>
+            <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>30 €</div>
+          </div>
+        </AbsoluteFill>
+      </AbsoluteFill>
+      <div style={{ position: "absolute", left: 250, top: 150, opacity: info }}>
+        <div style={label(20)}>Black Friday Deal</div>
+        <div style={{ ...label(46, 700), letterSpacing: "0.06em", marginTop: 10 }}>69 € Trackie</div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 export const RunwayClean: React.FC<{ freeze?: boolean }> = ({ freeze = false }) => {
   const frame = useCurrentFrame();
   const segs = segments(freeze);
@@ -78,11 +139,9 @@ export const RunwayClean: React.FC<{ freeze?: boolean }> = ({ freeze = false }) 
       {placed.map((p, i) => (
         <Sequence key={i} from={p.at} durationInFrames={p.len}>
           {p.freeze ? (
-            <Freeze frame={0}>
-              <OffthreadVideo src={staticFile(SRC)} startFrom={p.src} muted toneMapped={false} style={full} />
-            </Freeze>
+            <FreezeMoment len={p.len} />
           ) : (
-            <OffthreadVideo src={staticFile(SRC)} startFrom={p.src} muted toneMapped={false} style={full} />
+            <OffthreadVideo src={staticFile(p.file ?? SRC)} startFrom={p.file ? 0 : p.src} muted toneMapped={false} style={full} />
           )}
         </Sequence>
       ))}
@@ -92,30 +151,9 @@ export const RunwayClean: React.FC<{ freeze?: boolean }> = ({ freeze = false }) 
         </Freeze>
       </Sequence>
 
-      {/* Version 2: Standbild mit Pfeilen und Preisen, integriert ins Bild */}
-      {freezeSeg && frame >= freezeSeg.at && frame < freezeSeg.at + freezeSeg.len && (
-        <AbsoluteFill style={{ opacity: interpolate(frame, [freezeSeg.at, freezeSeg.at + 3, freezeSeg.at + freezeSeg.len - 3, freezeSeg.at + freezeSeg.len], [0, 1, 1, 0], clamp) }}>
-          <div style={{ position: "absolute", left: 250, top: 150 }}>
-            <div style={label(20)}>Black Friday Deal</div>
-            <div style={{ ...label(46, 700), letterSpacing: "0.06em", marginTop: 10 }}>69 € Trackie</div>
-          </div>
-          {/* Hoodie */}
-          <Callout from={[1040, 520]} elbow={[1240, 400]} to={[1360, 400]} />
-          <div style={{ position: "absolute", left: 1376, top: 400, transform: "translateY(-50%)" }}>
-            <div style={label(18)}>Hoodie</div>
-            <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>39 €</div>
-          </div>
-          {/* Jogger */}
-          <Callout from={[905, 880]} elbow={[660, 820]} to={[560, 820]} />
-          <div style={{ position: "absolute", right: 1920 - 544, top: 820, transform: "translateY(-50%)", textAlign: "right" }}>
-            <div style={label(18)}>Jogger</div>
-            <div style={{ ...label(34, 700), letterSpacing: "0.06em", marginTop: 4 }}>30 €</div>
-          </div>
-        </AbsoluteFill>
-      )}
       {freezeSeg && (
         <Sequence from={freezeSeg.at} durationInFrames={8} layout="none">
-          <Audio src={staticFile("sfx/click.wav")} volume={0.35} />
+          <Audio src={staticFile("sfx/click.wav")} volume={0.3} />
         </Sequence>
       )}
 
