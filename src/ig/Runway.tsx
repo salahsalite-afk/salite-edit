@@ -84,7 +84,7 @@ export const Runway: React.FC<{ variant: RunwayVariant }> = ({ variant }) => {
         <div style={{ position: "absolute", left: 300, top: "50%", transform: "translateY(-50%)", opacity: textIn }}>
           <Line size={96} weight={700} color={color}>Black Friday</Line>
           <Line size={96} weight={700} color={color} style={{ marginTop: 20 }}>
-            Tracksuit <span style={{ color: RED }}>60 €</span>
+            Trackie <span style={{ color: RED }}>69 €</span>
           </Line>
         </div>
       )}

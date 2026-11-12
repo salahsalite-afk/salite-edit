@@ -26,8 +26,8 @@ const T2_END = T2_START + 63; // Schnitt auf Look 2
 const END_CARD = T_C + Math.round((34.24 - 31.0) * 25);
 const PW_IN = END_CARD + 40;
 export const PASSWORT_URL = ""; // vom Kunden: Adresse der Passwort-Seite
-// Preis im Text (Kunde: 60 €; Passwort-Seite zeigt 69 €)
-const PREIS = "60 €";
+// Preis im Text: 69 € (vom Kunden bestätigt, wie auf der Passwort-Seite)
+const PREIS = "69 €";
 const SHOT_IN = PW_IN + 8;
 const SHOT_LEN = 115;
 

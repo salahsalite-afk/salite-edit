@@ -41,6 +41,6 @@ Feedback zur ersten Fassung (12.11.2026) und neue Regeln:
 4. Rahmen-Vorlagen um einen fertigen Film zerstören ihn: Der Fit und die Schuhe sind nicht mehr richtig zu sehen. Fertige Kampagnenfilme bleiben im Vollbild in ihrem Originalformat, ohne Rahmen. Text höchstens ganz dezent im Bild, an einer freien Stelle (z. B. links mittig auf der Wand), erst nach einem Filmtitel.
 5. Nicht passende Looks werden ganz herausgeschnitten (hier: Model im weißen Tanktop, zu wenig seriös für den Film). Die Musik läuft dabei ungeschnitten weiter; die entstandene Lücke füllt das stehende Endbild.
 6. Varianten pro Plattform liefern: Instagram plain ohne Text, Instagram mit dezentem Text und DM-Aufruf ("Schreib uns per DM: Ich brauch ein Passwort"), TikTok nur mit "Black Friday" und Preis.
-7. Preis im Runway-Film laut Kunde: Tracksuit 60 €.
+7. Preis bestätigt: Trackie 69 € (wie auf der Passwort-Seite). Wort "Trackie" wie auf der Seite verwenden.
 8. Neuer Effekt "Text hinter dem Model": großer Sale-Text (Anton, Preis in Rot) auf der Wand, das freigestellte Model läuft davor und verdeckt ihn immer mehr. Nur kurz am Anfang. Werkzeug: `scripts/cutout.py` (BiRefNet lite, rund 8 s pro Frame auf 4 Kernen, also nur die nötigen Frames freistellen). Vorlage: `src/ig/RunwayBF.tsx`.
 9. Eingebrannte Titel im Film (hier "SALITE RUNWAY") entfernt man, indem man die Titel-Frames herausschneidet; die Musik läuft weiter.
