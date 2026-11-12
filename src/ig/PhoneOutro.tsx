@@ -1,7 +1,7 @@
 import { Audio, Easing, Img, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 
 // Outro: Smartphone in der Bildmitte. Passwort-Seite, Tipp auf "Get your password",
-// dann DM-Chat mit SALITE: "Passwort" wird getippt und gesendet.
+// dann DM-Chat mit SALITE (echtes Profilbild: Chrom-S auf Weiß, public/ig/profilbild.jpg): "Passwort" wird getippt und gesendet.
 // Frames relativ zum Start dieser Sequenz (25 fps).
 export const PHONE = {
   in: 0,
@@ -33,9 +33,7 @@ const DmScreen: React.FC<{ frame: number }> = ({ frame }) => {
       {/* Kopfzeile */}
       <div style={{ position: "absolute", top: 54, left: 0, right: 0, height: 64, display: "flex", alignItems: "center", gap: 12, padding: "0 18px", borderBottom: "1px solid #EFEFEF" }}>
         <div style={{ fontSize: 30, lineHeight: 1, marginTop: -4 }}>‹</div>
-        <div style={{ width: 40, height: 40, borderRadius: 20, background: "#1E1712", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Img src={staticFile("brand/salite-s-light.svg")} style={{ width: 24, height: 24 }} />
-        </div>
+        <Img src={staticFile("ig/profilbild.jpg")} style={{ width: 40, height: 40, borderRadius: 20, objectFit: "cover", border: "1px solid #EFEFEF" }} />
         <div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>saliteclothing</div>
           <div style={{ fontWeight: 600, fontSize: 12, color: "#8E8E8E" }}>SALITE</div>
@@ -43,9 +41,7 @@ const DmScreen: React.FC<{ frame: number }> = ({ frame }) => {
       </div>
       {/* Profil-Mitte */}
       <div style={{ position: "absolute", top: 170, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div style={{ width: 92, height: 92, borderRadius: 46, background: "#1E1712", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Img src={staticFile("brand/salite-s-light.svg")} style={{ width: 54, height: 54 }} />
-        </div>
+        <Img src={staticFile("ig/profilbild.jpg")} style={{ width: 92, height: 92, borderRadius: 46, objectFit: "cover", border: "1px solid #EFEFEF" }} />
         <div style={{ fontWeight: 700, fontSize: 18, marginTop: 12 }}>SALITE</div>
         <div style={{ fontWeight: 600, fontSize: 13, color: "#8E8E8E", marginTop: 4 }}>saliteclothing</div>
       </div>
