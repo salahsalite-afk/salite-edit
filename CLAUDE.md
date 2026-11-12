@@ -158,6 +158,7 @@ Der Hauptagent schneidet. Die Spezialisten prüfen, bevor etwas den Kunden errei
 | `salite-brand` | Pflegt `BRAND.md`: Nische, Color Grading, Sprache, Formate | vor neuen Formaten |
 | `salite-instagram` | Storys und Foto-Dumps passend zum TikTok desselben Tages (Customer Journey TikTok zu Instagram zu Kauf) | für jedes TikTok-Video |
 | `salite-trendscout` | Täglicher Trendbericht in `trends/`: Marken (Corteiz, Supreme, Stüssy, 6PM, Peso, None of Us und neue), Hooks, Formate, Plattform-Änderungen, Saison, Posting-Zeiten | täglich als geplanter Task |
+| `salite-orchestrator` | Chef des Teams: bewertet alle Agenten (`agents/SCOREBOARD.md`), lässt Herausforderer gegen schwache Agenten antreten, archiviert Verlierer, erschafft ohne Rückfrage neue Agenten, legt Bündnisse fest (`agents/ALLIANZEN.md`) | täglich nach dem Evolver und nach jedem Video |
 | `salite-evolver` | Setzt die stärksten Trendfunde selbstständig um, bewertet alle Agenten, ersetzt schwache, schlägt neue Bausteine und Skills vor, protokolliert alles in LEARNINGS | nach jedem Trendbericht und nach jedem Video |
 
 Schleife: bauen, Standbilder, Kritik von `salite-critic`, `salite-sound` und `salite-retention`, korrigieren. Höchstens zwei Runden, dann dem Kunden zeigen.
