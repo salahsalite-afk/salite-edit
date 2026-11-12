@@ -1,4 +1,4 @@
-import { AbsoluteFill, Audio, continueRender, delayRender, Freeze, Img, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, continueRender, delayRender, Easing, Freeze, Img, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { PHONE, PhoneOutro } from "./PhoneOutro";
 import track from "./track_grey.json";
 
@@ -62,6 +62,19 @@ const Price: React.FC<{ old: string; now: string; align?: "left" | "right" }> = 
   </div>
 );
 
+// Kleine Statistik-Linie, die in Rot nach unten geht (Preis fällt), zeichnet sich einmal
+const DownChart: React.FC<{ p: number }> = ({ p }) => {
+  const pts: [number, number][] = [[0, 6], [22, 12], [40, 9], [62, 22], [84, 19], [110, 38]];
+  const d = pts.map((q, i) => `${i ? "L" : "M"}${q[0]},${q[1]}`).join(" ");
+  const len = 150;
+  return (
+    <svg width={124} height={46} viewBox="-4 0 124 46" style={{ overflow: "visible", filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.35))" }}>
+      <path d={d} fill="none" stroke="#FF3B30" strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={len} strokeDashoffset={len * (1 - p)} />
+      <path d="M100,38 L110,38 L110,28" fill="none" stroke="#FF3B30" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" opacity={p > 0.95 ? 1 : 0} />
+    </svg>
+  );
+};
+
 // Feiner Hinweis-Pfeil wie in einem Lookbook: Punkt auf dem Kleidungsstück, Linie zum Text
 const Callout: React.FC<{ from: [number, number]; elbow: [number, number]; to: [number, number] }> = ({ from, elbow, to }) => (
   <svg width={1920} height={1080} style={{ position: "absolute", inset: 0 }}>
@@ -82,6 +95,7 @@ const FreezeMoment: React.FC<{ len: number; cfg?: FreezeCfg }> = ({ len, cfg = F
   const fx = interpolate(f, [0, 10, len - 10, len], [0, 1, 1, 0], clamp);
   const info = interpolate(f, [8, 20, len - 12, len - 2], [0, 1, 1, 0], clamp);
   const zoom = interpolate(f, [0, len], [1, 1.07]);
+  const chartP = interpolate(f, [12, 34], [0, 1], { ...clamp, easing: Easing.out(Easing.cubic) });
   const scan = interpolate(f, [6, 30], [-10, 110], clamp);
   const cut = staticFile(cfg.cut);
   const [hx, hy] = cfg.hoodie;
@@ -123,7 +137,10 @@ const FreezeMoment: React.FC<{ len: number; cfg?: FreezeCfg }> = ({ len, cfg = F
         </AbsoluteFill>
       </AbsoluteFill>
       <div style={{ position: "absolute", left: 250, top: 150, opacity: info }}>
-        <div style={label(20)}>Black Friday Deal</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <div style={{ ...label(20), color: "#FF3B30" }}>Black Friday Deal</div>
+          <DownChart p={chartP} />
+        </div>
         <div style={{ ...label(46, 700), letterSpacing: "0.06em", marginTop: 10 }}>69 € Trackie</div>
       </div>
     </AbsoluteFill>
@@ -153,6 +170,7 @@ const TrackMoment: React.FC<{ drone: boolean; ramp: boolean }> = ({ drone, ramp 
   const fx = interpolate(f, [TRACK_IN, TRACK_IN + 7, OUT_ - 5, OUT_], [0, 1, 1, 0], clamp);
   const info = interpolate(f, [TRACK_IN + 5, TRACK_IN + 14, OUT_ - (ramp ? 9 : 6), OUT_ - (ramp ? 4 : 1)], [0, 1, 1, 0], clamp);
   const scan = interpolate(f, [TRACK_IN + 5, TRACK_IN + (ramp ? 45 : 30)], [-10, 110], clamp);
+  const chartP = interpolate(f, [TRACK_IN + 10, TRACK_IN + 32], [0, 1], { ...clamp, easing: Easing.out(Easing.cubic) });
   const cut = staticFile(`ig/cut/${ramp ? "ramp" : "a"}/cut_${String(k).padStart(4, "0")}.png`);
   if (f < TRACK_IN || f >= OUT_) return null;
   const [hx, hy] = tp.hoodie;
@@ -202,7 +220,10 @@ const TrackMoment: React.FC<{ drone: boolean; ramp: boolean }> = ({ drone, ramp 
         </div>
       </AbsoluteFill>
       <div style={{ position: "absolute", left: 250, top: 150, opacity: info }}>
-        <div style={label(20)}>Black Friday Deal</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <div style={{ ...label(20), color: "#FF3B30" }}>Black Friday Deal</div>
+          <DownChart p={chartP} />
+        </div>
         <div style={{ ...label(46, 700), letterSpacing: "0.06em", marginTop: 10 }}>69 € Trackie</div>
       </div>
     </AbsoluteFill>
@@ -213,7 +234,7 @@ const TrackMoment: React.FC<{ drone: boolean; ramp: boolean }> = ({ drone, ramp 
 // Drohne zieht schnell weg (2,4x, Bewegungsunschärfe), zurück in den Runway-Film. Drohne farblich an den Film angepasst.
 const DRONE_SEGS: Seg[] = [
   { src: 0, len: 30 },
-  { src: 0, len: 86, file: "ig/d_in2.mp4" }, // ab 20,0 s: er läuft noch, bleibt stehen, zieht die Kapuze ab
+  { src: 0, len: 65, file: "ig/d_in2.mp4" }, // ab 21,6 s: kurz bevor er stehen bleibt, dann schnell zur Pose
   { src: 0, len: 55, freeze: true },
   { src: 0, len: 19, file: "ig/d_out.mp4" },
 ];
