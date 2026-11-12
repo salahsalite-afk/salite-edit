@@ -8,8 +8,10 @@
     "transcribe": ".venv/bin/python scripts/transcribe.py"
   },
   "dependencies": {
+    "@fontsource/anton": "5.3.0",
     "@fontsource/bodoni-moda": "5.3.0",
     "@fontsource/cormorant-garamond": "5.3.0",
+    "@fontsource/inter": "5.3.0",
     "@fontsource/jost": "5.3.0",
     "@remotion/cli": "4.0.542",
     "@remotion/google-fonts": "4.0.542",

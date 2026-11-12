@@ -26,3 +26,13 @@ Fakten zur Marke:
 - 12.11.2026: `salite-trendscout` angelegt (täglicher Trendbericht in `trends/`). `salite-evolver` setzt die stärksten Funde jetzt selbstständig um (Wunsch des Kunden), außer Qualitätsregeln, Look und Markenfakten.
 - 12.11.2026: `salite-orchestrator` angelegt (Wunsch des Kunden): entscheidet selbstständig über neue, ersetzte und archivierte Agenten, Wettbewerb über Herausforderer, Bündnisse in `agents/ALLIANZEN.md`, Noten in `agents/SCOREBOARD.md`. Höchstens 15 aktive Agenten, Archiv statt Löschen.
 - 12.11.2026: Aktive Kampagne `KAMPAGNE_BLACK_WEEK.md` angelegt (Passwort-Drop, Tracksuit 69 €, Start 27.11.2026). Alle Agenten richten sich danach aus.
+
+## Video 2: Instagram-Post Black Friday, RED-Runway-Film (12.11.2026)
+
+Quelle: fertig geschnittener Runway-Film 3840x2160, 25 fps, 37,5 s, mit Musik, fünf Looks. Ohne Sprecher, ohne Untertitel.
+Umsetzung: Film unverändert und vollständig im 4:5 Rahmen (1080x1350), Blendenschnitt an jedem Look-Wechsel, Kontaktbogen mit einem Abzug pro Look, Schlusskarte mit Preis.
+
+Kunden-Feedback während der Arbeit und neue Regeln:
+1. Grau und Schwarz sind die meistverkauften Tracksuits. Sie stehen immer im Vordergrund: größer, mit Label BESTSELLER, auf der Schlusskarte als große Abzüge.
+2. Für Sale-Posts mehr Streetwear, moderner, heller, weniger elegant: heller Hintergrund, kräftige Schrift (Anton für Schlagzeilen, Inter für Labels), Preis und Rabatt in Rot. Das ist die Sale-Variante; der elegante SALITE Look bleibt für Marken-Inhalte.
+3. Instagram ist exklusiver als TikTok, aber Sale-Kommunikation muss trotzdem sofort ins Auge springen.

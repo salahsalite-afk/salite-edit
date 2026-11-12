@@ -1,5 +1,6 @@
 import { Composition } from "remotion";
 import { Main, OUTRO_FRAMES } from "./Main";
+import { IG, IG_FRAMES, Instagram } from "./ig/Instagram";
 
 // Werte exakt aus ffprobe von public/video.mp4:
 // HEVC 2160x3840 (9:16), 60 fps, 78,227 s, bt709 SDR
@@ -11,12 +12,16 @@ export const SOURCE = {
 };
 
 export const RemotionRoot: React.FC = () => (
-  <Composition
-    id="Main"
-    component={Main}
-    fps={SOURCE.fps}
-    width={SOURCE.width}
-    height={SOURCE.height}
-    durationInFrames={SOURCE.durationInFrames + OUTRO_FRAMES}
-  />
+  <>
+    <Composition
+      id="Main"
+      component={Main}
+      fps={SOURCE.fps}
+      width={SOURCE.width}
+      height={SOURCE.height}
+      durationInFrames={SOURCE.durationInFrames + OUTRO_FRAMES}
+    />
+    {/* Instagram-Post Black Friday: RED-Runway-Film im 4:5 Rahmen */}
+    <Composition id="Instagram" component={Instagram} fps={IG.fps} width={IG.width} height={IG.height} durationInFrames={IG_FRAMES} />
+  </>
 );

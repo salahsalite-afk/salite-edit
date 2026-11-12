@@ -46,6 +46,7 @@ Logo: `brand/salite-s-dark.svg` auf hellem Grund, `brand/salite-s-light.svg` auf
 Das S nie verzerren, nie neu zeichnen, keine Effekte darauf außer Einblenden.
 
 Regeln:
+- Ausnahme: Sale-Content (Black Friday, Drops) nutzt die Sale-Variante aus `BRAND.md`: hell, Anton und Inter, Preis in Rot. Grau und Schwarz als Bestseller immer im Vordergrund.
 - Ausnahme: nachgebaute TikTok-Elemente (FOLGEN, KOMMENTAR) behalten ihr Originaldesign inklusive TikTok-Rot, sonst wirken sie nicht echt.
 - Kein Neongelb, kein Signalrot, keine bunten Sticker, keine Emojis, keine fette Sans in Großbuchstaben als Hauptschrift.
 - Keine Farbverläufe in Lila oder Blau, keine Glas Effekte, keine leuchtenden Ränder. Das ist der typische KI Look.

@@ -22,3 +22,9 @@ Color Grading: noch offen (`salite-brand` erarbeitet einen Vorschlag).
 
 ## Verkaufsprinzip
 Exklusivität über Passwort-Drops: Kommentar, DM, Registrierung, Passwort am Drop-Tag, Kauf. Erste Kampagne: Black Week ab 27.11.2026 (`KAMPAGNE_BLACK_WEEK.md`).
+
+## Bestseller
+Grauer und schwarzer Tracksuit verkaufen sich am besten. In jedem Verkaufs-Content stehen sie im Vordergrund.
+
+## Sale-Variante (Black Friday, Drops)
+Heller Hintergrund (#EDECE8), Schrift Anton für Schlagzeilen und Inter für Labels, Text Schwarz (#111111), Preis und Rabatt in Rot (#E3120B), Label-Kästen in Rot mit weißer Schrift, weiße Abzüge mit klarem Schatten. Vorlage: `src/ig/Instagram.tsx`.
