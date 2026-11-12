@@ -1,0 +1,1 @@
+Sounds hier ablegen (wav oder mp3). Leer lassen ist ok, dann erzeugt Claude Code die Standard Sounds.
