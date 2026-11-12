@@ -12,7 +12,7 @@ PRE=""
 if [ -n "${FOCUS:-}" ]; then
   A=${FOCUS%,*}; B=${FOCUS#*,}
   G="clip((t-$A)/0.35\,0\,1)*clip(($B-t)/0.5\,0\,1)"
-  PRE="asplit[d][w];[d]volume='1-$G':eval=frame[d2];[w]lowpass=f=650,lowpass=f=650,volume='0.55*$G':eval=frame[w2];[d2][w2]amix=inputs=2:normalize=0,"
+  PRE="asplit[d][w];[d]volume='1-$G':eval=frame[d2];[w]lowpass=f=600,lowpass=f=600,volume='0.42*$G':eval=frame[w2];[d2][w2]amix=inputs=2:normalize=0,"
 fi
 M=$(ffmpeg -hide_banner -i out/master.mp4 -vn -filter_complex "[0:a]${PRE}loudnorm=I=-14:TP=-1:LRA=20:print_format=json" -f null - 2>&1 | sed -n '/^{/,/^}/p')
 g() { echo "$M" | python3 -c "import json,sys; print(json.load(sys.stdin)['$1'])"; }

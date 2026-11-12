@@ -118,29 +118,31 @@ const FreezeMoment: React.FC<{ len: number }> = ({ len }) => {
 };
 
 // Verfolgen statt Stoppen: Model läuft weiter (Quelle 5 bis 50), Fokus-Effekt und Preise wandern mit.
-const TRACK_IN = 5;
+const TRACK_IN = 2; // etwas früher als zuvor (5), damit der Effekt länger steht
 const TRACK_OUT = 51;
 type TP = { hoodie: [number, number]; jogger: [number, number] };
 const TrackMoment: React.FC = () => {
   const f = useCurrentFrame();
   const src = Math.min(TRACK_OUT - 1, Math.max(0, f));
   const tp = (track as unknown as TP[])[src];
-  const fx = interpolate(f, [TRACK_IN, TRACK_IN + 8, TRACK_OUT - 8, TRACK_OUT], [0, 1, 1, 0], clamp);
-  const info = interpolate(f, [TRACK_IN + 6, TRACK_IN + 16, TRACK_OUT - 10, TRACK_OUT - 2], [0, 1, 1, 0], clamp);
-  const scan = interpolate(f, [TRACK_IN + 4, TRACK_IN + 26], [-10, 110], clamp);
+  const fx = interpolate(f, [TRACK_IN, TRACK_IN + 7, TRACK_OUT - 5, TRACK_OUT], [0, 1, 1, 0], clamp);
+  const info = interpolate(f, [TRACK_IN + 5, TRACK_IN + 14, TRACK_OUT - 6, TRACK_OUT - 1], [0, 1, 1, 0], clamp);
+  const scan = interpolate(f, [TRACK_IN + 5, TRACK_IN + 30], [-10, 110], clamp);
   const cut = staticFile(`ig/cut/a/cut_${String(src).padStart(4, "0")}.png`);
   if (f < TRACK_IN || f >= TRACK_OUT) return null;
   const [hx, hy] = tp.hoodie;
   const [jx, jy] = tp.jogger;
   return (
     <AbsoluteFill>
-      {/* Hintergrund dunkler und weich: unscharfe, abgedunkelte Kopie des laufenden Bilds */}
+      {/* Hintergrund: Drohnenflug durchs Studio, dunkel und weich (die Welt bewegt sich, der Fokus bleibt auf dem Model) */}
       <AbsoluteFill style={{ opacity: fx }}>
-        <OffthreadVideo src={staticFile(SRC)} startFrom={0} muted toneMapped={false} style={{ ...full, filter: "blur(6px) brightness(0.62) saturate(0.85)" }} />
+        <Sequence from={TRACK_IN} layout="none">
+          <OffthreadVideo src={staticFile("ig/drone_bg.mp4")} muted toneMapped={false} style={{ ...full, filter: "blur(3px) brightness(0.48) saturate(0.8)" }} />
+        </Sequence>
       </AbsoluteFill>
-      <AbsoluteFill style={{ background: "radial-gradient(ellipse 55% 75% at 52% 58%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%)", opacity: fx }} />
-      {/* Model scharf obenauf */}
-      <Img src={cut} style={{ ...full, position: "absolute", inset: 0, opacity: fx }} />
+      <AbsoluteFill style={{ background: "radial-gradient(ellipse 50% 70% at 52% 58%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.6) 100%)", opacity: fx }} />
+      {/* Model scharf und etwas heller obenauf */}
+      <Img src={cut} style={{ ...full, position: "absolute", inset: 0, opacity: fx, filter: "brightness(1.08) contrast(1.03)" }} />
       <AbsoluteFill
         style={{
           WebkitMaskImage: `url(${cut})`,
@@ -211,6 +213,11 @@ export const RunwayClean: React.FC<{ freeze?: boolean; track?: boolean }> = ({ f
       {trackMode && (
         <Sequence from={TRACK_IN} durationInFrames={8} layout="none">
           <Audio src={staticFile("sfx/click.wav")} volume={0.3} />
+        </Sequence>
+      )}
+      {trackMode && (
+        <Sequence from={TRACK_IN + 5} durationInFrames={24} layout="none">
+          <Audio src={staticFile("sfx/scan_soft.wav")} volume={0.22} />
         </Sequence>
       )}
       {freezeSeg && (
