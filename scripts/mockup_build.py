@@ -113,12 +113,32 @@ P0 = pants.crop(pants.getbbox())
 H.save("out/mockup/salite_hoodie_grau_transparent.png")
 P0.save("out/mockup/salite_jogger_grau_transparent.png")
 
-# Set: Jogger etwa 1,45x so lang wie der Hoodie-Körper, leicht gedreht und unter den Hoodie geschoben
-s = (H.height * 0.62 * 1.45) / P0.height
-P = P0.resize((int(P0.width * s), int(P0.height * s)), Image.LANCZOS).rotate(-3, expand=True, resample=Image.BICUBIC)
+# Set wie getragen: Jogger gerade unter dem Hoodie, Bund verschwindet unter dem Hoodie-Saum.
+# Das Jogger-Foto stammt aus einer Größentabelle und ist dort gestaucht; Proportionen werden auf
+# übliche Flatlay-Maße korrigiert: Hüftbreite etwa 0,8x der Hoodie-Saum, Länge etwa 2,15x die Saumbreite.
+Hm = np.array(H)[..., 3] > 128
+cxH = Hm.shape[1] // 2
+hem_bottom = int(np.where(Hm[:, cxH - 5 : cxH + 5].any(1))[0].max())
+row = Hm[hem_bottom - 40]
+lab, n = ndimage.label(row)
+segs = [(np.where(lab == i)[0].min(), np.where(lab == i)[0].max()) for i in range(1, n + 1)]
+body = max(segs, key=lambda t: t[1] - t[0])  # breitestes Segment = Körper, ohne Ärmel
+hem_w = body[1] - body[0]
+hem_cx = (body[0] + body[1]) / 2
+Pm = np.array(P0)[..., 3] > 128
+hip = Pm[int(Pm.shape[0] * 0.15)]
+hip_w = np.where(hip)[0].max() - np.where(hip)[0].min()
+sx = (hem_w * 0.80) / hip_w
+sy = (hem_w * 2.15) / P0.height
+P = P0.resize((int(P0.width * sx), int(P0.height * sy)), Image.LANCZOS)
+Pm2 = np.array(P)[..., 3] > 128
+top_p = int(np.where(Pm2.any(1))[0].min())
+waist_cx = np.where(Pm2[top_p + int(P.height * 0.12)])[0].mean()
 W = max(H.width, P.width) + 260
 top = 90
-py = top + int(H.height * 0.80)
+hx = (W - H.width) // 2
+px = int(hx + hem_cx - waist_cx)
+py = top + hem_bottom - int(P.height * 0.10)  # Bund liegt unter dem Saum
 CH = max(top + H.height, py + P.height + 110)
 
 
@@ -141,8 +161,6 @@ def studio_bg(w, h):
 
 def build(bg):
     c = studio_bg(W, CH) if bg else Image.new("RGBA", (W, CH), (0, 0, 0, 0))
-    hx = (W - H.width) // 2
-    px = (W - P.width) // 2 + 40
     for img, x, yy in ((P, px, py), (H, hx, top)):
         c.alpha_composite(shadow(img, 26, 0.22), (x + 5, yy + 20))  # weicher Raumschatten
         c.alpha_composite(shadow(img, 4, 0.30), (x + 1, yy + 3))  # Kontaktschatten
