@@ -8,6 +8,7 @@ import { CARD, SafetyCard } from "./card/SafetyCard";
 import { Mockup } from "./card/TracksuitMockup";
 import { BEAMER, SafetyBeamer } from "./card/SafetyBeamer";
 import { BEAMER_CLEAN, SafetyBeamerClean } from "./card/SafetyBeamerClean";
+import { COMIC_CARD, COMIC_SLIDES, SafetyComicCard, SafetyComicSlides } from "./card/SafetyComic";
 
 // Werte exakt aus ffprobe von public/video.mp4:
 // HEVC 2160x3840 (9:16), 60 fps, 78,227 s, bt709 SDR
@@ -52,6 +53,9 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="SafetyBeamer" component={SafetyBeamer} fps={BEAMER.fps} width={BEAMER.width} height={BEAMER.height} durationInFrames={BEAMER.frames} />
     {/* reduzierte Beamer-Karte: nur ein paar Sekunden im Bild */}
     <Composition id="SafetyBeamerClean" component={SafetyBeamerClean} fps={BEAMER_CLEAN.fps} width={BEAMER_CLEAN.width} height={BEAMER_CLEAN.height} durationInFrames={BEAMER_CLEAN.frames} />
+    {/* Comic-Sicherheitskarte: dezente Karte und Slideshow */}
+    <Composition id="SafetyComicCard" component={SafetyComicCard} fps={COMIC_CARD.fps} width={COMIC_CARD.width} height={COMIC_CARD.height} durationInFrames={COMIC_CARD.frames} />
+    <Composition id="SafetyComicSlides" component={SafetyComicSlides} fps={COMIC_SLIDES.fps} width={COMIC_SLIDES.width} height={COMIC_SLIDES.height} durationInFrames={COMIC_SLIDES.frames} />
     {/* Digitales Tracksuit-Mockup (transparent), je Farbe */}
     {(["grey", "black", "bordeaux", "pink"] as const).map((c) => (
       <Composition key={c} id={`Mockup-${c}`} component={Mockup} defaultProps={{ color: c }} fps={30} width={1200} height={1800} durationInFrames={1} />
