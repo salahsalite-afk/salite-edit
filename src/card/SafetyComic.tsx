@@ -9,12 +9,62 @@ export const COMIC_CARD = { fps: 30, width: 1920, height: 1080, frames: 270 };
 export const SLIDE_LEN = 90;
 export const COMIC_SLIDES = { fps: 30, width: 1920, height: 1080, frames: SLIDE_LEN * SCENES.length };
 
+// Himmel statt Beige: Verlauf, Comic-Rasterpunkte, ziehende Wolken
+const Sky: React.FC = () => {
+  const f = useCurrentFrame();
+  const clouds = [
+    { y: 1010, s: 1.2, sp: 0.5, x0: 200 },
+    { y: 560, s: 0.8, sp: 0.35, x0: 1300 },
+    { y: 980, s: 1.0, sp: 0.6, x0: 1100 },
+    { y: 330, s: 0.7, sp: 0.3, x0: 1700 },
+  ];
+  return (
+    <AbsoluteFill style={{ background: "linear-gradient(180deg, #6FC3F2 0%, #A9DCF8 45%, #DDF1FD 100%)" }}>
+      <AbsoluteFill style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.55) 2.2px, transparent 2.6px)", backgroundSize: "18px 18px", opacity: 0.6 }} />
+      <svg width={1920} height={1080} style={{ position: "absolute", inset: 0 }}>
+        {clouds.map((c, i) => {
+          const x = ((c.x0 + f * c.sp) % 2300) - 250;
+          return (
+            <path
+              key={i}
+              transform={`translate(${x} ${c.y}) scale(${c.s})`}
+              d="M-120 20 q-34 0 -30 -26 q4 -22 34 -18 q8 -30 44 -24 q20 -26 56 -10 q34 -14 52 14 q36 -2 34 28 q-2 22 -30 22 Z"
+              fill="#FFFFFF"
+              stroke={CC.ink}
+              strokeWidth={4}
+              opacity={0.95}
+            />
+          );
+        })}
+      </svg>
+    </AbsoluteFill>
+  );
+};
+
+const comicBox: React.CSSProperties = {
+  background: "#FFFFFF",
+  border: `5px solid ${CC.ink}`,
+  boxShadow: `10px 10px 0 ${CC.ink}`,
+  borderRadius: 18,
+};
+
+const comicTitle = (size: number): React.CSSProperties => ({
+  fontFamily: "'Anton'",
+  fontSize: size,
+  lineHeight: 0.98,
+  color: "#FFFFFF",
+  WebkitTextStroke: `${Math.max(3, size * 0.05)}px ${CC.ink}`,
+  paintOrder: "stroke fill",
+  textShadow: `${size * 0.06}px ${size * 0.06}px 0 ${CC.ink}`,
+  letterSpacing: "0.01em",
+});
+
 const Header: React.FC<{ o: number; small?: boolean }> = ({ o, small }) => (
   <div style={{ position: "absolute", left: 40, right: 40, top: small ? 26 : 30, opacity: o }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
       <div>
-        <div style={{ fontFamily: "'Anton'", fontSize: small ? 56 : 80, lineHeight: 0.95, color: CC.ink }}>SICHERHEITSHINWEISE</div>
-        <div style={{ fontFamily: "'Inter'", fontWeight: 800, fontSize: small ? 17 : 21, letterSpacing: "0.24em", color: CC.red, marginTop: 9 }}>SAFETY INSTRUCTIONS</div>
+        <div style={comicTitle(small ? 60 : 80)}>SICHERHEITSHINWEISE</div>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 800, fontSize: small ? 17 : 21, letterSpacing: "0.24em", color: CC.ink, marginTop: 12 }}>SAFETY INSTRUCTIONS</div>
       </div>
       <div style={{ textAlign: "right" }}>
         <div
@@ -36,7 +86,7 @@ const Header: React.FC<{ o: number; small?: boolean }> = ({ o, small }) => (
         </div>
       </div>
     </div>
-    <div style={{ height: 3, background: CC.ink, marginTop: small ? 12 : 16 }} />
+    
   </div>
 );
 
@@ -46,8 +96,9 @@ const Num: React.FC<{ n: number | string; size: number }> = ({ n, size }) => (
       width: size,
       height: size,
       borderRadius: size / 2,
-      background: CC.ink,
-      color: CC.paper,
+      background: CC.red,
+      border: `4px solid ${CC.ink}`,
+      color: "#FFFFFF",
       fontFamily: "'Anton'",
       fontSize: size * 0.56,
       display: "flex",
@@ -70,7 +121,8 @@ export const SafetyComicCard: React.FC = () => {
   const stamp = interpolate(f, [72, 79], [0, 1], clamp);
 
   return (
-    <AbsoluteFill style={{ background: CC.paper }}>
+    <AbsoluteFill>
+      <Sky />
       <Header o={a(0)} />
       {SCENES.slice(0, 4).map((s, i) => {
         const p = a(appear[i]);
@@ -82,10 +134,8 @@ export const SafetyComicCard: React.FC = () => {
               left: GX[i],
               top: 196,
               width: PW,
-              height: 540,
-              background: CC.panel,
-              border: `3px solid ${CC.ink}`,
-              borderRadius: 16,
+              height: 530,
+              ...comicBox,
               overflow: "hidden",
               opacity: p,
               transform: `translateY(${(1 - p) * 26}px)`,
@@ -98,7 +148,7 @@ export const SafetyComicCard: React.FC = () => {
               <Num n={i + 1} size={46} />
             </div>
             <div style={{ position: "absolute", left: 20, right: 20, bottom: 20 }}>
-              <div style={{ fontFamily: "'Anton'", fontSize: s.title.length > 16 ? 40 : 48, color: CC.ink, lineHeight: 1 }}>{s.title}</div>
+              <div style={{ fontFamily: "'Anton'", fontSize: s.title.length > 16 ? 40 : 50, color: CC.ink, lineHeight: 1 }}>{s.title}</div>
               <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 21, color: CC.sub, marginTop: 8, lineHeight: 1.25 }}>{s.line}</div>
             </div>
           </div>
@@ -113,9 +163,7 @@ export const SafetyComicCard: React.FC = () => {
           right: 40,
           top: 776,
           height: 210,
-          background: "#FFFFFF",
-          border: `3px solid ${CC.ink}`,
-          borderRadius: 16,
+          ...comicBox,
           overflow: "hidden",
           opacity: stripIn,
           transform: `translateY(${(1 - stripIn) * 40}px)`,
@@ -165,7 +213,7 @@ export const SafetyComicCard: React.FC = () => {
         LETZTE AUSGABE
       </div>
 
-      <div style={{ position: "absolute", right: 40, bottom: 20, fontFamily: "'Inter'", fontWeight: 600, fontSize: 15, color: CC.muted, opacity: a(80) }}>
+      <div style={{ position: "absolute", right: 40, bottom: 20, fontFamily: "'Inter'", fontWeight: 600, fontSize: 15, color: CC.ink, opacity: a(80) }}>
         *Satire. Ersetzt weder Gurt noch Airbag.
       </div>
     </AbsoluteFill>
@@ -182,7 +230,8 @@ export const SafetyComicSlides: React.FC = () => {
   const head = i === 0 ? interpolate(f, [0, 12], [0, 1], { ...clamp, easing: OUT }) : 1;
 
   return (
-    <AbsoluteFill style={{ background: CC.paper }}>
+    <AbsoluteFill>
+      <Sky />
       <Header o={head} small />
       {/* Szene groß links */}
       <div
@@ -192,9 +241,7 @@ export const SafetyComicSlides: React.FC = () => {
           top: 160,
           width: 1040,
           height: 760,
-          background: CC.panel,
-          border: `3px solid ${CC.ink}`,
-          borderRadius: 18,
+          ...comicBox,
           overflow: "hidden",
         }}
       >
@@ -209,10 +256,7 @@ export const SafetyComicSlides: React.FC = () => {
         </div>
         <div
           style={{
-            fontFamily: "'Anton'",
-            fontSize: s.title.length > 16 ? 96 : 120,
-            lineHeight: 0.98,
-            color: CC.ink,
+            ...comicTitle(s.title.length > 16 ? 112 : 140),
             marginTop: 34,
             opacity: a(6),
             transform: `translateX(${(1 - a(6)) * 40}px)`,
@@ -220,17 +264,17 @@ export const SafetyComicSlides: React.FC = () => {
         >
           {s.title}
         </div>
-        <div style={{ height: 6, width: 120 * a(12), background: CC.red, marginTop: 26 }} />
-        <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 38, lineHeight: 1.25, color: CC.sub, marginTop: 24, opacity: a(12) }}>{s.line}</div>
+        <div style={{ height: 10, width: 150 * a(12), background: CC.red, border: `3px solid ${CC.ink}`, marginTop: 30 }} />
+        <div style={{ display: "inline-block", fontFamily: "'Inter'", fontWeight: 800, fontSize: 38, lineHeight: 1.25, color: CC.ink, marginTop: 26, opacity: a(12), background: "#FFFFFF", border: `4px solid ${CC.ink}`, borderRadius: 14, padding: "12px 20px", boxShadow: `6px 6px 0 ${CC.ink}` }}>{s.line}</div>
       </div>
       {/* Fortschritt */}
       <div style={{ position: "absolute", left: 1140, bottom: 160, display: "flex", gap: 14 }}>
         {SCENES.map((_, k) => (
-          <div key={k} style={{ width: k === i ? 54 : 18, height: 18, borderRadius: 9, background: k === i ? CC.red : k < i ? CC.ink : "#D8CBB4" }} />
+          <div key={k} style={{ width: k === i ? 54 : 18, height: 18, borderRadius: 9, background: k === i ? CC.red : k < i ? CC.ink : "#FFFFFF", border: `3px solid ${CC.ink}` }} />
         ))}
       </div>
       {s.kind === "bullet" && (
-        <div style={{ position: "absolute", right: 40, bottom: 24, fontFamily: "'Inter'", fontWeight: 600, fontSize: 16, color: CC.muted }}>*Satire. Ersetzt weder Gurt noch Airbag.</div>
+        <div style={{ position: "absolute", right: 40, bottom: 24, fontFamily: "'Inter'", fontWeight: 600, fontSize: 16, color: CC.ink }}>*Satire. Ersetzt weder Gurt noch Airbag.</div>
       )}
     </AbsoluteFill>
   );

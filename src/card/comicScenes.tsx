@@ -362,5 +362,5 @@ export const SCENES: { kind: SceneKind; title: string; line: string }[] = [
   { kind: "cold", title: "KEINE WINTERJACKE NÖTIG", line: "550 GSM Heavyweight. Kältedicht." },
   { kind: "bullet", title: "BULLETPROOF*", line: "Nichts kommt durch." },
   { kind: "lastcall", title: "LAST CALL", line: "Diese Edition gibt es nur einmal." },
-  { kind: "first", title: "NUR FIRST CLASS", line: "Einstieg nur mit Passwort." },
+  { kind: "first", title: "NUR MIT PASSWORT", line: "Kommentiere: Ich brauch ein Passwort." },
 ];
