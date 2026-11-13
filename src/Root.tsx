@@ -4,6 +4,8 @@ import { IG, IG_FRAMES, Instagram } from "./ig/Instagram";
 import { Runway, RW } from "./ig/Runway";
 import { RBF, RunwayBF } from "./ig/RunwayBF";
 import { RC, RunwayClean } from "./ig/RunwayClean";
+import { CARD, SafetyCard } from "./card/SafetyCard";
+import { Mockup } from "./card/TracksuitMockup";
 
 // Werte exakt aus ffprobe von public/video.mp4:
 // HEVC 2160x3840 (9:16), 60 fps, 78,227 s, bt709 SDR
@@ -42,5 +44,11 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="RunwayTrackRamp" component={RunwayClean} defaultProps={{ freeze: false, track: true, drone: false, ramp: true }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
     {/* V4: Drohnen-Einschub beim grauen Look mit Standbild von oben */}
     <Composition id="RunwayDrone" component={RunwayClean} defaultProps={{ freeze: true, track: false, drone: false, ramp: false, droneCut: true }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
+    {/* Sicherheitskarte Fahrschule (Satire) */}
+    <Composition id="SafetyCard" component={SafetyCard} fps={CARD.fps} width={CARD.width} height={CARD.height} durationInFrames={CARD.frames} />
+    {/* Digitales Tracksuit-Mockup (transparent), je Farbe */}
+    {(["grey", "black", "bordeaux", "pink"] as const).map((c) => (
+      <Composition key={c} id={`Mockup-${c}`} component={Mockup} defaultProps={{ color: c }} fps={30} width={1200} height={1800} durationInFrames={1} />
+    ))}
   </>
 );

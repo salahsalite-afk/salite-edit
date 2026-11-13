@@ -28,3 +28,9 @@ Grauer und schwarzer Tracksuit verkaufen sich am besten. In jedem Verkaufs-Conte
 
 ## Sale-Variante (Black Friday, Drops)
 Heller Hintergrund (#EDECE8), Schrift Anton für Schlagzeilen und Inter für Labels, Text Schwarz (#111111), Preis und Rabatt in Rot (#E3120B), Label-Kästen in Rot mit weißer Schrift, weiße Abzüge mit klarem Schatten. Vorlage: `src/ig/Instagram.tsx`.
+
+## Produkt-Fakten Tracksuit (nie verfälschen)
+- Hoodie: oversized und kastig, überschnittene Schultern, Kapuze, sehr große und weite Kängurutasche bis zum Bauch (deutlich größer als bei normalen Hoodies). Puff-Print-S auf der linken Brust mit sieben Steinen im Kreis (blau, klar, rot).
+- Jogger: weites gerades Bein, breiter Bund, Stack über dem Schuh, Puff-Print-S mit Steinen auf dem linken Oberschenkel.
+- Stoff: 550 GSM, schwerer Sweat, Melange-Grau (Bestseller: Grau und Schwarz).
+- Mockups nur aus echten Fotos des Produkts (auf Bügel oder flach gelegt), nie gezeichnet oder KI-generiert, damit Fit und Taschengröße stimmen. Beim Freistellen Form nicht verändern: nichts strecken, schmaler machen oder glätten.
