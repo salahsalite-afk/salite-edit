@@ -6,6 +6,8 @@ import { RBF, RunwayBF } from "./ig/RunwayBF";
 import { RC, RunwayClean } from "./ig/RunwayClean";
 import { CARD, SafetyCard } from "./card/SafetyCard";
 import { Mockup } from "./card/TracksuitMockup";
+import { BEAMER, SafetyBeamer } from "./card/SafetyBeamer";
+import { BEAMER_CLEAN, SafetyBeamerClean } from "./card/SafetyBeamerClean";
 
 // Werte exakt aus ffprobe von public/video.mp4:
 // HEVC 2160x3840 (9:16), 60 fps, 78,227 s, bt709 SDR
@@ -46,6 +48,10 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="RunwayDrone" component={RunwayClean} defaultProps={{ freeze: true, track: false, drone: false, ramp: false, droneCut: true }} fps={RC.fps} width={RC.width} height={RC.height} durationInFrames={RC.frames} />
     {/* Sicherheitskarte Fahrschule (Satire) */}
     <Composition id="SafetyCard" component={SafetyCard} fps={CARD.fps} width={CARD.width} height={CARD.height} durationInFrames={CARD.frames} />
+    {/* Sicherheitskarte für den Beamer (16:9), Fahrlehrer erklärt Feld für Feld */}
+    <Composition id="SafetyBeamer" component={SafetyBeamer} fps={BEAMER.fps} width={BEAMER.width} height={BEAMER.height} durationInFrames={BEAMER.frames} />
+    {/* reduzierte Beamer-Karte: nur ein paar Sekunden im Bild */}
+    <Composition id="SafetyBeamerClean" component={SafetyBeamerClean} fps={BEAMER_CLEAN.fps} width={BEAMER_CLEAN.width} height={BEAMER_CLEAN.height} durationInFrames={BEAMER_CLEAN.frames} />
     {/* Digitales Tracksuit-Mockup (transparent), je Farbe */}
     {(["grey", "black", "bordeaux", "pink"] as const).map((c) => (
       <Composition key={c} id={`Mockup-${c}`} component={Mockup} defaultProps={{ color: c }} fps={30} width={1200} height={1800} durationInFrames={1} />
