@@ -53,7 +53,8 @@ export const loadFonts = () => {
   faces.forEach((f) => f.load().then((x) => document.fonts.add(x)));
 };
 
-export const PriceTag: React.FC<{ tag: Tag; ax: number; ay: number; p: number }> = ({ tag, ax, ay, p }) => {
+export const PriceTag: React.FC<{ tag: Tag; ax: number; ay: number; p: number; dark?: boolean }> = ({ tag, ax, ay, p, dark = false }) => {
+  const ink = dark ? "#F2ECE1" : "#3A3A38";
   const s = tag.side;
   const boxX = ax + s * 250; // Kante des Schilds zur Figur hin
   const boxY = ay - 70;
@@ -65,12 +66,12 @@ export const PriceTag: React.FC<{ tag: Tag; ax: number; ay: number; p: number }>
         <polyline
           points={`${ax},${ay} ${ax + s * 50},${boxY + 46} ${elbowX},${boxY + 46}`}
           fill="none"
-          stroke="#3A3A38"
+          stroke={ink}
           strokeWidth={1.8}
           strokeDasharray={len}
           strokeDashoffset={len * (1 - p)}
         />
-        <circle cx={ax} cy={ay} r={5} fill="#FFFFFF" stroke="#3A3A38" strokeWidth={1.8} opacity={p} />
+        <circle cx={ax} cy={ay} r={5} fill="#FFFFFF" stroke={ink} strokeWidth={1.8} opacity={p} />
       </svg>
       <div
         style={{
@@ -83,8 +84,8 @@ export const PriceTag: React.FC<{ tag: Tag; ax: number; ay: number; p: number }>
           transform: `translateY(${(1 - p) * 10}px)`,
         }}
       >
-        <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 17, letterSpacing: "0.2em", color: "#7A7A76" }}>{tag.label}</div>
-        <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 26, color: "#5E5E5A", textDecoration: "line-through", textDecorationThickness: 2, marginTop: 4 }}>{tag.old}</div>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 17, letterSpacing: "0.2em", color: dark ? "rgba(242,236,225,0.8)" : "#7A7A76" }}>{tag.label}</div>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 26, color: dark ? "rgba(242,236,225,0.85)" : "#5E5E5A", textDecoration: "line-through", textDecorationThickness: 2, marginTop: 4 }}>{tag.old}</div>
         <div style={{ display: "inline-block", background: "#D7261E", color: "#FFFFFF", fontFamily: "'Inter'", fontWeight: 700, fontSize: 32, padding: "4px 12px", marginTop: 6 }}>{tag.now}</div>
       </div>
     </>

@@ -66,6 +66,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="LineupPan" component={LineupPan} defaultProps={LINEUP_DEFAULT} fps={LINEUP.fps} width={LINEUP.width} height={LINEUP.height} durationInFrames={lineupFrames(LINEUP_DEFAULT.figures.length)} />
     {/* Story mit einem Look auf kleinem Leoparden-Teppich */}
     <Composition id="FitSingle" component={FitSingle} defaultProps={FIT_SINGLE_DEFAULT} fps={FIT_SINGLE.fps} width={FIT_SINGLE.width} height={FIT_SINGLE.height} durationInFrames={FIT_SINGLE.frames} />
+    <Composition id="FitSingleCurtain" component={FitSingle} defaultProps={{ ...FIT_SINGLE_DEFAULT, backdrop: "curtain" as const }} fps={FIT_SINGLE.fps} width={FIT_SINGLE.width} height={FIT_SINGLE.height} durationInFrames={FIT_SINGLE.frames} />
+    <Composition id="FitSingleSilver" component={FitSingle} defaultProps={{ ...FIT_SINGLE_DEFAULT, backdrop: "silver" as const }} fps={FIT_SINGLE.fps} width={FIT_SINGLE.width} height={FIT_SINGLE.height} durationInFrames={FIT_SINGLE.frames} />
     {/* Digitales Tracksuit-Mockup (transparent), je Farbe */}
     {(["grey", "black", "bordeaux", "pink"] as const).map((c) => (
       <Composition key={c} id={`Mockup-${c}`} component={Mockup} defaultProps={{ color: c }} fps={30} width={1200} height={1800} durationInFrames={1} />
