@@ -42,7 +42,7 @@ for gy in range(-1, TH * S // step + 2):
             px, py = cx + rng.uniform(-step / 2, step / 2), cy + rng.uniform(-step / 2, step / 2)
             pr = rng.uniform(3, 6) * S
             d.ellipse((px - pr * 1.3, py - pr, px + pr * 1.3, py + pr), fill=tuple(ring.astype(int)))
-img = img.filter(ImageFilter.GaussianBlur(1.4 * S)).resize((TW, TH), Image.LANCZOS)
+img = img.filter(ImageFilter.GaussianBlur((1.4 if SHAPE == 'runner' else 0.5) * S)).resize((TW, TH), Image.LANCZOS)
 a = np.asarray(img).astype(float)
 # Flor: feines, leicht gerichtetes Rauschen
 fur = ndimage.gaussian_filter(rng.normal(0, 1, (TH, TW)), (0.6, 1.4)) * 7
@@ -50,17 +50,40 @@ a += fur[..., None]
 # Einfassung
 yy, xx = np.mgrid[0:TH, 0:TW]
 if SHAPE == "oval":
-    # Abstand zum Ovalrand in Pixeln (nah genug für schmale Bänder)
+    # Abstand zum Ovalrand, leicht unregelmäßig wie ein echter, benutzter Teppich
     nx, ny = (xx - TW / 2) / (TW / 2), (yy - TH / 2) / (TH / 2)
     rr = np.sqrt(nx**2 + ny**2)
-    edge = (1 - rr) * TH / 2
-    gold = ((edge > 16) & (edge < 21)).astype(float)  # feine goldene Linie, sehr dezent
+    wobble = ndimage.gaussian_filter(rng.normal(0, 1, (TH, TW)), 14) * 20
+    edge = (1 - rr) * TH / 2 + wobble
+    gold = ((edge > 16) & (edge < 20.5)).astype(float)  # feine goldene Linie, sehr dezent
     dark = (edge < 16).astype(float)
     a = a * (1 - dark[..., None] * 0.5)
     gcol = np.array([176, 142, 82.0])
     a = a * (1 - gold[..., None] * 0.75) + gcol * gold[..., None] * 0.75
-    # Flor: Kanten des Musters etwas weicher, mehr Struktur
-    a = ndimage.gaussian_filter(a, (0.8, 0.8, 0)) + ndimage.gaussian_filter(rng.normal(0, 1, (TH, TW)), (0.5, 0.9))[..., None] * 6
+    # Schattierung: zum Rand hin dunkler (Flor kippt), großflächige Ton-Unterschiede
+    ao = np.clip(1 - edge / 70, 0, 1) ** 2
+    a *= (1 - 0.14 * ao)[..., None]
+    tone = ndimage.gaussian_filter(rng.normal(0, 1, (TH, TW)), 40) * 40
+    a *= (1 + 0.05 * tone)[..., None]
+    # Gebrauchsspuren: Staub und Fusseln hell, ein paar dunkle Krümel, alles winzig und scharf
+    inside = edge > 22
+    for _ in range(int(TW * TH / 1200)):
+        y0, x0 = rng.integers(0, TH), rng.integers(0, TW)
+        if not inside[y0, x0]:
+            continue
+        if rng.random() < 0.75:
+            ln = rng.integers(1, 5)
+            ang = rng.uniform(0, np.pi)
+            for t in range(ln):
+                yy0 = int(y0 + np.sin(ang) * t); xx0 = int(x0 + np.cos(ang) * t)
+                if 0 <= yy0 < TH and 0 <= xx0 < TW:
+                    a[yy0, xx0] = a[yy0, xx0] * 0.45 + np.array([215, 205, 200.0]) * 0.55
+        else:
+            a[y0, x0] *= 0.55
+    # Fransen-Andeutung: einzelne Fasern stehen über die Kante
+    fib = (edge > -2.5) & (edge < 0) & (rng.random((TH, TW)) < 0.35)
+    edge = np.where(fib, 0.6, edge)
+    a = a + rng.normal(0, 1, (TH, TW))[..., None] * 5  # Flor, fein und scharf
 else:
     edge = np.minimum.reduce([yy, TH - 1 - yy, xx, TW - 1 - xx]).astype(float)
     band = (edge < 14).astype(float)
@@ -87,7 +110,7 @@ if SHAPE == "oval":
     for o in range(1, lip + 1):
         pad[o : o + D, :, :3] = np.where(al[..., None] > 0, np.array([48, 10, 14.0]), pad[o : o + D, :, :3])
         pad[o : o + D, :, 3] = np.maximum(pad[o : o + D, :, 3], rows[..., 3])
-    sh = ndimage.gaussian_filter(np.pad(al, ((lip + 2, 8), (0, 0)))[: D + lip + 10], 4) * 0.25
+    sh = ndimage.gaussian_filter(np.pad(al, ((lip + 2, 8), (0, 0)))[: D + lip + 10], 5) * 0.38
     out_a = np.zeros_like(pad)
     out_a[..., 3] = sh * 255
     for c in range(4):
