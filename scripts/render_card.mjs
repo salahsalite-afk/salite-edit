@@ -10,7 +10,7 @@ const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts"), public
 const composition = await selectComposition({ serveUrl, id, browserExecutable });
 if (mode === "video") {
   const out = path.join(outDir, `${secs[0] ?? id}.mp4`);
-  await renderMedia({ serveUrl, composition, codec: "h264", crf: 16, pixelFormat: "yuv420p", outputLocation: out, concurrency: 4, browserExecutable });
+  await renderMedia({ serveUrl, composition, codec: "h264", crf: 16, pixelFormat: "yuv420p", outputLocation: out, concurrency: Number(process.env.CONC ?? 4), browserExecutable });
   console.log("ok", out);
 } else {
   for (const s of secs) {

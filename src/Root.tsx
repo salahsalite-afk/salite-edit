@@ -7,6 +7,7 @@ import { RC, RunwayClean } from "./ig/RunwayClean";
 import { CARD, SafetyCard } from "./card/SafetyCard";
 import { Mockup } from "./card/TracksuitMockup";
 import { FIT_STORY, FIT_STORY_DEFAULT, FitStory, fitStoryFrames } from "./story/FitStory";
+import { LINEUP, LINEUP_DEFAULT, LineupPan, lineupFrames } from "./story/LineupPan";
 import { BEAMER, SafetyBeamer } from "./card/SafetyBeamer";
 import { BEAMER_CLEAN, SafetyBeamerClean } from "./card/SafetyBeamerClean";
 import { COMIC_CARD, COMIC_SLIDES, SafetyComicCard, SafetyComicSlides } from "./card/SafetyComic";
@@ -60,6 +61,8 @@ export const RemotionRoot: React.FC = () => (
     {/* Fit-Story: ein Look aus allen Perspektiven in einer Instagram Story */}
     <Composition id="FitStory" component={FitStory} defaultProps={FIT_STORY_DEFAULT} fps={FIT_STORY.fps} width={FIT_STORY.width} height={FIT_STORY.height} durationInFrames={1} />
     <Composition id="FitStoryVideo" component={FitStory} defaultProps={{ ...FIT_STORY_DEFAULT, animate: true }} fps={FIT_STORY.fps} width={FIT_STORY.width} height={FIT_STORY.height} durationInFrames={fitStoryFrames(FIT_STORY_DEFAULT.figures.length)} />
+    {/* Lookbook-Line-up: Kamera gleitet von Figur zu Figur, Black-Friday-Preise, Leoparden-Läufer */}
+    <Composition id="LineupPan" component={LineupPan} defaultProps={LINEUP_DEFAULT} fps={LINEUP.fps} width={LINEUP.width} height={LINEUP.height} durationInFrames={lineupFrames(LINEUP_DEFAULT.figures.length)} />
     {/* Digitales Tracksuit-Mockup (transparent), je Farbe */}
     {(["grey", "black", "bordeaux", "pink"] as const).map((c) => (
       <Composition key={c} id={`Mockup-${c}`} component={Mockup} defaultProps={{ color: c }} fps={30} width={1200} height={1800} durationInFrames={1} />
