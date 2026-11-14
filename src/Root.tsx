@@ -6,6 +6,7 @@ import { RBF, RunwayBF } from "./ig/RunwayBF";
 import { RC, RunwayClean } from "./ig/RunwayClean";
 import { CARD, SafetyCard } from "./card/SafetyCard";
 import { Mockup } from "./card/TracksuitMockup";
+import { FIT_STORY, FIT_STORY_DEFAULT, FitStory } from "./story/FitStory";
 import { BEAMER, SafetyBeamer } from "./card/SafetyBeamer";
 import { BEAMER_CLEAN, SafetyBeamerClean } from "./card/SafetyBeamerClean";
 import { COMIC_CARD, COMIC_SLIDES, SafetyComicCard, SafetyComicSlides } from "./card/SafetyComic";
@@ -56,6 +57,8 @@ export const RemotionRoot: React.FC = () => (
     {/* Comic-Sicherheitskarte: dezente Karte und Slideshow */}
     <Composition id="SafetyComicCard" component={SafetyComicCard} fps={COMIC_CARD.fps} width={COMIC_CARD.width} height={COMIC_CARD.height} durationInFrames={COMIC_CARD.frames} />
     <Composition id="SafetyComicSlides" component={SafetyComicSlides} fps={COMIC_SLIDES.fps} width={COMIC_SLIDES.width} height={COMIC_SLIDES.height} durationInFrames={COMIC_SLIDES.frames} />
+    {/* Fit-Story: ein Look aus allen Perspektiven in einer Instagram Story */}
+    <Composition id="FitStory" component={FitStory} defaultProps={FIT_STORY_DEFAULT} fps={FIT_STORY.fps} width={FIT_STORY.width} height={FIT_STORY.height} durationInFrames={FIT_STORY.frames} />
     {/* Digitales Tracksuit-Mockup (transparent), je Farbe */}
     {(["grey", "black", "bordeaux", "pink"] as const).map((c) => (
       <Composition key={c} id={`Mockup-${c}`} component={Mockup} defaultProps={{ color: c }} fps={30} width={1200} height={1800} durationInFrames={1} />
