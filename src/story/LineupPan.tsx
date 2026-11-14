@@ -42,7 +42,7 @@ const RUG_TOP = 1335;
 const RUG_D = 300;
 
 let loaded = false;
-const loadFonts = () => {
+export const loadFonts = () => {
   if (loaded || typeof document === "undefined") return;
   loaded = true;
   const faces = [
@@ -53,7 +53,7 @@ const loadFonts = () => {
   faces.forEach((f) => f.load().then((x) => document.fonts.add(x)));
 };
 
-const PriceTag: React.FC<{ tag: Tag; ax: number; ay: number; p: number }> = ({ tag, ax, ay, p }) => {
+export const PriceTag: React.FC<{ tag: Tag; ax: number; ay: number; p: number }> = ({ tag, ax, ay, p }) => {
   const s = tag.side;
   const boxX = ax + s * 250; // Kante des Schilds zur Figur hin
   const boxY = ay - 70;

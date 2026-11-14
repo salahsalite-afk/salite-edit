@@ -11,13 +11,14 @@ from PIL import Image, ImageDraw, ImageFilter
 from scipy import ndimage
 
 out, W, D = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+SHAPE = sys.argv[4] if len(sys.argv) > 4 else "runner"  # runner oder oval (kleiner Teppich mit goldener Kante)
 rng = np.random.default_rng(11)
-TW, TH = W, int(W * 0.2)  # Draufsicht: Läufer 5:1
+TW, TH = (W, int(W * 0.2)) if SHAPE == "runner" else (W, int(W * 0.62))  # Draufsicht
 S = 2  # Supersampling
 
 base = np.array([104, 24, 34.0])  # Bordeaux
 ring = np.array([38, 8, 12.0])  # dunkle Rosette
-core = np.array([140, 52, 56.0])  # hellerer Kern
+core = np.array([140, 52, 56.0]) if SHAPE == "runner" else np.array([124, 38, 46.0])  # hellerer Kern
 
 img = Image.new("RGB", (TW * S, TH * S), tuple(base.astype(int)))
 d = ImageDraw.Draw(img)
@@ -48,9 +49,22 @@ fur = ndimage.gaussian_filter(rng.normal(0, 1, (TH, TW)), (0.6, 1.4)) * 7
 a += fur[..., None]
 # Einfassung
 yy, xx = np.mgrid[0:TH, 0:TW]
-edge = np.minimum.reduce([yy, TH - 1 - yy, xx, TW - 1 - xx]).astype(float)
-band = (edge < 14).astype(float)
-a = a * (1 - band[..., None] * 0.55)
+if SHAPE == "oval":
+    # Abstand zum Ovalrand in Pixeln (nah genug für schmale Bänder)
+    nx, ny = (xx - TW / 2) / (TW / 2), (yy - TH / 2) / (TH / 2)
+    rr = np.sqrt(nx**2 + ny**2)
+    edge = (1 - rr) * TH / 2
+    gold = ((edge > 16) & (edge < 21)).astype(float)  # feine goldene Linie, sehr dezent
+    dark = (edge < 16).astype(float)
+    a = a * (1 - dark[..., None] * 0.5)
+    gcol = np.array([176, 142, 82.0])
+    a = a * (1 - gold[..., None] * 0.75) + gcol * gold[..., None] * 0.75
+    # Flor: Kanten des Musters etwas weicher, mehr Struktur
+    a = ndimage.gaussian_filter(a, (0.8, 0.8, 0)) + ndimage.gaussian_filter(rng.normal(0, 1, (TH, TW)), (0.5, 0.9))[..., None] * 6
+else:
+    edge = np.minimum.reduce([yy, TH - 1 - yy, xx, TW - 1 - xx]).astype(float)
+    band = (edge < 14).astype(float)
+    a = a * (1 - band[..., None] * 0.55)
 # sanftes Licht von oben links
 a *= (1.06 - 0.12 * (yy / TH) - 0.04 * (xx / TW))[..., None]
 a = np.clip(a, 0, 255)
@@ -59,11 +73,32 @@ tex = np.dstack([a, alpha]).astype(np.uint8)
 
 # Perspektive: Zeilen hinten (oben) gestaucht, vorne breiter
 t = (np.arange(D) / (D - 1))  # 0 hinten, 1 vorne
-k = 1.8
+k = 1.8 if SHAPE == "runner" else 0.6
 src_y = np.log1p(t * (np.exp(k) - 1)) / k * (TH - 1)  # hinten mehr Fläche pro Zeile
 src = np.asarray(tex).astype(float)
 rows = np.stack([src[int(y)] * (1 - (y % 1)) + src[min(int(y) + 1, TH - 1)] * (y % 1) for y in src_y])
 # hinten etwas dunkler (weiter weg vom Licht)
 rows[..., :3] *= (0.9 + 0.1 * t)[:, None, None]
+if SHAPE == "oval":
+    # Dicke des Teppichs: dunkle Kante vorne, darunter ein schmaler weicher Kontaktschatten
+    lip = 6
+    pad = np.zeros((D + lip + 10, TW, 4))
+    al = rows[..., 3] / 255
+    for o in range(1, lip + 1):
+        pad[o : o + D, :, :3] = np.where(al[..., None] > 0, np.array([48, 10, 14.0]), pad[o : o + D, :, :3])
+        pad[o : o + D, :, 3] = np.maximum(pad[o : o + D, :, 3], rows[..., 3])
+    sh = ndimage.gaussian_filter(np.pad(al, ((lip + 2, 8), (0, 0)))[: D + lip + 10], 4) * 0.25
+    out_a = np.zeros_like(pad)
+    out_a[..., 3] = sh * 255
+    for c in range(4):
+        pass
+    comp = out_a.copy()
+    m = pad[..., 3:4] / 255
+    comp[..., :3] = pad[..., :3]
+    comp[..., 3] = np.maximum(pad[..., 3], out_a[..., 3])
+    top = rows[..., 3:4] / 255
+    comp[:D, :, :3] = rows[..., :3] * top + comp[:D, :, :3] * (1 - top)
+    comp[:D, :, 3] = np.maximum(comp[:D, :, 3], rows[..., 3])
+    rows = comp
 Image.fromarray(np.clip(rows, 0, 255).astype(np.uint8)).save(out, optimize=True)
 print("ok", W, D)
