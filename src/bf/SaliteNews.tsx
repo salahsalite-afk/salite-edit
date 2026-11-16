@@ -38,6 +38,11 @@ export const T = {
   prints: [W("Navy"), W("Schwarz"), W("Grau")],
   restockPrice: W("69", "s04b") - 0.1,
   restockEnd: SEC.restock.end,
+  comment: SEC.comment.start,
+  commentEnd: SEC.comment.end,
+  typeStart: W("Ich", "s04c") - 0.05,
+  typeEnd: W("Passwort", "s04c") + 0.35,
+  ten: W("Zehn") - 0.1,
   extras: SEC.extras.start,
   denim: W("Denim") - 0.5,
   longsleeve: W("Longsleeves") - 0.2,
@@ -242,6 +247,82 @@ const ExtraRow: React.FC<{ at: () => number; name: string; old: string; now: str
   );
 };
 
+// ---------- KOMMENTAR: TikTok-Kommentarleiste, jemand tippt "Ich brauch ein Passwort" ----------
+const COMMENT = "Ich brauch ein Passwort";
+const KEYS = ["qwertzuiopü", "asdfghjklöä", "yxcvbnm"];
+export const typedAt = (i: number) => T.typeStart + ((T.typeEnd - T.typeStart) * i) / COMMENT.length;
+const CommentSheet: React.FC = () => {
+  const fr = useCurrentFrame();
+  const t = fr / FPS;
+  const up = interpolate(fr, [f(T.comment), f(T.comment + 0.3)], [0, 1], { ...clamp, easing: OUT });
+  const down = interpolate(fr, [f(T.commentEnd - 0.25), f(T.commentEnd)], [0, 1], clamp);
+  const n = Math.max(0, Math.min(COMMENT.length, Math.floor(((t - T.typeStart) / (T.typeEnd - T.typeStart)) * COMMENT.length)));
+  const sent = t >= T.typeEnd + 0.15;
+  const post = interpolate(fr, [f(T.typeEnd + 0.15), f(T.typeEnd + 0.45)], [0, 1], { ...clamp, easing: OUT });
+  const ten = interpolate(fr, [f(T.ten), f(T.ten + 0.35)], [0, 1], { ...clamp, easing: OUT });
+  const lastKey = n > 0 && !sent ? COMMENT[n - 1].toLowerCase() : "";
+  const pressed = n > 0 && !sent && t - typedAt(n - 1) < 0.09;
+  const SHEET = 960;
+  return (
+    <div style={{ position: "absolute", left: 0, right: 0, top: SHEET + (1 - up + down) * 960, height: 1920 - SHEET, background: "#FFFFFF", borderRadius: "28px 28px 0 0", boxShadow: "0 -10px 40px rgba(0,0,0,0.25)" }}>
+      <div style={{ textAlign: "center", fontFamily: "'Inter'", fontWeight: 700, fontSize: 28, color: "#161823", marginTop: 26 }}>Kommentare</div>
+      <div style={{ position: "absolute", right: 36, top: 22, fontFamily: "'Inter'", fontWeight: 600, fontSize: 34, color: "#161823" }}>✕</div>
+      {/* Hinweis: 10 Passwörter */}
+      <div style={{ position: "absolute", top: 86, left: 0, right: 0, display: "flex", justifyContent: "center", opacity: ten }}>
+        <div style={{ background: "#FE2C55", color: "#FFFFFF", fontFamily: "'Inter'", fontWeight: 700, fontSize: 22, letterSpacing: "0.04em", padding: "8px 18px", borderRadius: 8 }}>10 PASSWÖRTER WERDEN HIER VERGEBEN</div>
+      </div>
+      {/* gepostet */}
+      <div style={{ position: "absolute", top: 160, left: 36, right: 36, display: "flex", gap: 18, alignItems: "flex-start", opacity: post, transform: `translateY(${(1 - post) * 16}px)` }}>
+        <div style={{ width: 64, height: 64, borderRadius: 32, background: "#D9D9DE", flexShrink: 0 }} />
+        <div>
+          <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 22, color: "#8A8B91" }}>du · jetzt</div>
+          <div style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 30, color: "#161823", marginTop: 4 }}>{COMMENT}</div>
+        </div>
+      </div>
+      {/* Eingabe */}
+      <div style={{ position: "absolute", top: 300, left: 24, right: 24, height: 76, borderRadius: 38, background: "#F1F1F2", display: "flex", alignItems: "center", padding: "0 28px", justifyContent: "space-between" }}>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 500, fontSize: 28, color: sent || n === 0 ? "#8A8B91" : "#161823" }}>
+          {sent || n === 0 ? "Kommentar hinzufügen …" : COMMENT.slice(0, n)}
+          {!sent && n > 0 && <span style={{ color: "#FE2C55", opacity: Math.floor(fr / 20) % 2 ? 1 : 0 }}>|</span>}
+        </div>
+        <div style={{ width: 52, height: 52, borderRadius: 26, background: n > 0 && !sent ? "#FE2C55" : "#E3E3E5", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter'", fontWeight: 700, fontSize: 28 }}>↑</div>
+      </div>
+      {/* Tastatur */}
+      <div style={{ position: "absolute", top: 410, left: 0, right: 0, bottom: 0, background: "#D1D3D9", padding: "22px 10px 0" }}>
+        {KEYS.map((row, r) => (
+          <div key={r} style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 18 }}>
+            {row.split("").map((k) => (
+              <div
+                key={k}
+                style={{
+                  width: 86,
+                  height: 104,
+                  borderRadius: 12,
+                  background: pressed && k === lastKey ? "#AEB2BB" : "#FFFFFF",
+                  boxShadow: "0 2px 0 rgba(0,0,0,0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "'Inter'",
+                  fontWeight: 500,
+                  fontSize: 40,
+                  color: "#111",
+                  transform: pressed && k === lastKey ? "scale(1.12) translateY(-10px)" : "none",
+                }}
+              >
+                {k}
+              </div>
+            ))}
+          </div>
+        ))}
+        <div style={{ display: "flex", justifyContent: "center", gap: 10 }}>
+          <div style={{ width: 640, height: 104, borderRadius: 12, background: pressed && lastKey === " " ? "#AEB2BB" : "#FFFFFF", boxShadow: "0 2px 0 rgba(0,0,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter'", fontSize: 30, color: "#555" }}>Leerzeichen</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ---------- Passwort-Teil ----------
 const Phone: React.FC<{ children: React.ReactNode; w: number; top: number }> = ({ children, w, top }) => {
   const h = w * 2.174;
@@ -431,7 +512,7 @@ const Captions: React.FC = () => {
   const fr = useCurrentFrame();
   const t = fr / FPS;
   const c = CAPS.find((k) => t >= k.s - 0.02 && t < k.e);
-  if (!c) return null;
+  if (!c || (t >= T.comment && t < T.commentEnd)) return null;
   const light = t >= T.pass && t < T.outro; // helle Vollbild-Grafik: dunkle Schrift
   return (
     <div style={{ position: "absolute", left: 60, right: 140, bottom: 420, display: "flex", justifyContent: "center" }}>
@@ -480,6 +561,7 @@ export const SaliteNews: React.FC<NewsProps> = ({ voice = "shm/voice.wav", voice
         <Restock />
       </Sequence>
       {/* diese Teile rechnen mit absoluten Zeiten, daher ohne Sequence eingeblendet */}
+      {fr >= f(T.comment) && fr < f(T.commentEnd) && <CommentSheet />}
       {fr >= f(T.extras) && fr < f(T.pass) && <Extras />}
       {fr >= f(T.pass) && fr < f(T.follow) && <Password />}
       {fr >= f(T.follow) && fr < f(T.outro) && <Follow />}
@@ -497,6 +579,8 @@ export const SaliteNews: React.FC<NewsProps> = ({ voice = "shm/voice.wav", voice
         <Sfx key={p} at={p} src="tick.wav" vol={0.14} len={0.4} />
       ))}
       <Sfx at={T.restockPrice} src="tick.wav" vol={0.18} len={0.4} />
+      {COMMENT.split("").map((c, i) => (c === " " ? null : <Sfx key={`c${i}`} at={typedAt(i + 1) - 0.02} src={`keyboard_tap${(i % 3) + 1}.wav`} vol={0.12} len={0.2} />))}
+      <Sfx at={T.typeEnd + 0.15} src="click.wav" vol={0.12} len={0.4} />
       {[T.denim, T.longsleeve, T.nylon].map((a) => (
         <Sfx key={a} at={a + 0.35} src="tick.wav" vol={0.16} len={0.4} />
       ))}

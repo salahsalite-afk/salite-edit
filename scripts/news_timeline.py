@@ -43,6 +43,7 @@ SHORT = [
     ("box", ["s02a", "s02b"], [(PINK, 3.3, 8.298), (PINK, 8.298, 10.25), (PINK, 14.78, 17.05)]),
     ("quality", ["s03a", "s03b"], [(PINK, 17.05, 18.4), (BARBER, 2.2, 4.16), (BARBER, 11.8, 17.1)]),
     ("restock", ["s04a", "s04b"], [(RUNWAY, 0.3, 1.8), (RUNWAY, 4.0, 6.5), (RUNWAY, 30.6, 34.3)]),
+    ("comment", ["s04c"], [(BARBER, 5.14, 11.78), (RUNWAY, 11.4, 12.9)]),
     ("extras", ["s05a", "s05b", "s05c"], [(RUNWAY, 8.0, 11.4), (RUNWAY, 14.0, 19.0)]),
     ("password", ["s06a", "s06b"], []),
     ("follow", ["s07"], []),
@@ -55,7 +56,7 @@ TAIL = 1.5  # kurze Stille und Logo nach dem letzten Wort
 import os
 import subprocess
 
-PITCH = 2 ** (-2.5 / 12)  # 2,5 Halbtöne tiefer: seriöser, tiefer (Kunde)
+PITCH = 2 ** (float(os.environ.get("PITCH_ST", "0")) / 12)  # echte Stimme (ElevenLabs): unverändert lassen
 SPEED = 1.0  # Tempo neutral (Kunde)
 proc_dir = f"{sel_dir}/proc"
 os.makedirs(proc_dir, exist_ok=True)

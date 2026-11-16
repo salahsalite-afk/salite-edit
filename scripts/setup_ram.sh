@@ -6,15 +6,15 @@ cd "$(dirname "$0")/.."
 export TMPDIR=/dev/shm/rtmp PIP_CACHE_DIR=/dev/shm/tts/pipcache HF_HOME=/dev/shm/tts/hf HF_HUB_DISABLE_PROGRESS_BARS=1
 mkdir -p /dev/shm/rtmp /dev/shm/tts /dev/shm/bf raw/bf/vo/refs
 
-# 1) Python-Umgebung für die Stimme
-if [ ! -x /dev/shm/tts/venv/bin/python ]; then
+# 1) Python-Umgebung für die Stimme (SKIP_TTS=1 überspringt Stimme und Modell)
+if [ -z "$SKIP_TTS" ] && [ ! -x /dev/shm/tts/venv/bin/python ]; then
   python3.11 -m venv /dev/shm/tts/venv
   /dev/shm/tts/venv/bin/pip install -q --upgrade pip
   /dev/shm/tts/venv/bin/pip install -q onnxruntime==1.22.1 huggingface_hub==0.34.4 transformers==4.46.3 numpy==2.2.6 tqdm librosa==0.11.0 soundfile==0.13.1 pyarrow
 fi
 
 # 2) Modell und Referenzstimmen (Referenzen bleiben auf der Platte in raw/bf/vo/refs)
-/dev/shm/tts/venv/bin/python - <<'EOF'
+[ -n "$SKIP_TTS" ] || /dev/shm/tts/venv/bin/python - <<'EOF'
 import io, os
 import numpy as np, soundfile as sf, librosa, pyarrow.parquet as pq
 from huggingface_hub import hf_hub_download
