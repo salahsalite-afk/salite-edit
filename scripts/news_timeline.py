@@ -15,23 +15,24 @@ import soundfile as sf
 
 sel_dir, lines_p, voice_out, tl_out = sys.argv[1:5]
 SR = 48000
-LEAD = 0.45  # Gong vor dem ersten Wort
-GAP_IN = 0.22
-GAP_SEC = 0.42
+LEAD = 0.3  # Gong vor dem ersten Wort
+GAP_IN = 0.12
+GAP_SEC = 0.25
 PINK = "bf/pink.mp4"
 BARBER = "shm/barber.mp4"
 RUNWAY = "shm/runway.mp4"  # 4K-Runway-Film, mittig auf 9:16 zugeschnitten
 
-# Abschnitte: Sätze und Bildmaterial (Quelle, von, bis) in Reihenfolge
+# Abschnitte: Sätze und Bildmaterial (Quelle, von, bis), immer in Echtzeit (keine Zeitlupe, Kunde: zu langsam).
+# Reicht das Material nicht, kommen weitere Schnitte aus der Liste; nur ganz am Ende eines Abschnitts darf ein kurzes Standbild stehen.
 SECTIONS = [
-    ("hook", ["l01a", "l02a", "l02b", "l03a"], [(PINK, 0.0, 4.715)]),
-    ("box", ["l04a"], [(PINK, 4.715, 8.298)]),
-    ("expert", ["l05a", "l05b", "l06a"], [(PINK, 8.298, 14.07)]),
+    ("hook", ["l01a", "l02a", "l02b", "l03a"], [(PINK, 0.0, 4.715), (PINK, 4.715, 8.298)]),
+    ("box", ["l04a"], [(PINK, 14.78, 19.18), (PINK, 8.298, 10.25)]),
+    ("expert", ["l05a", "l05b", "l06a"], [(PINK, 10.25, 14.07), (PINK, 19.18, 23.6), (RUNWAY, 8.0, 11.0)]),
     ("witness", ["l06b"], [(PINK, 14.07, 14.78)]),
-    ("quality", ["l07a", "l07b"], [(PINK, 14.78, 19.18), (PINK, 19.18, 23.6)]),
+    ("quality", ["l07a", "l07b"], [(PINK, 23.6, 28.42), (BARBER, 0.0, 2.2)]),
     ("stitch", ["l08a"], [(BARBER, 2.2, 4.16), (BARBER, 11.8, 17.1)]),
-    ("restock", ["l09a", "l09b", "l10a", "l10b"], [(RUNWAY, 0.3, 1.8), (RUNWAY, 4.0, 7.0), (RUNWAY, 11.4, 12.9), (RUNWAY, 30.6, 34.3)]),
-    ("extras", ["l10c", "l10d", "l10e"], [(RUNWAY, 13.0, 19.6)]),
+    ("restock", ["l09a", "l09b", "l10a", "l10b"], [(RUNWAY, 0.3, 1.8), (RUNWAY, 4.0, 7.0), (RUNWAY, 11.4, 12.9), (BARBER, 5.14, 8.5), (RUNWAY, 30.6, 34.3)]),
+    ("extras", ["l10c", "l10d", "l10e"], [(RUNWAY, 8.0, 11.4), (RUNWAY, 14.0, 19.0), (RUNWAY, 19.0, 24.0)]),
     ("password", ["l11a", "l12a"], []),
     ("follow", ["l13a", "l14a"], []),
     ("outro", ["l15a", "l15b"], []),
@@ -76,7 +77,7 @@ for si, (name, ids, footage) in enumerate(SECTIONS):
         start = 0.0 if si == 0 else s0
         need = end - start
         have = sum(b - a for _, a, b in footage)
-        rate = min(1.0, max(0.5, have / need))
+        rate = 1.0  # Echtzeit
         at = start
         for src, a, b in footage:
             dur = (b - a) / rate
