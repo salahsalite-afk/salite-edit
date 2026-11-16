@@ -25,37 +25,31 @@ const W = (w: string, id?: string) => {
 export const T = {
   hookIn: 0.3,
   headlineOut: SEC.hook.end,
-  tickerOut: SEC.box.end,
-  zoom: W("ausschließlich"),
+  tickerOut: SEC.hook.end,
+  zoom: W("Black") - 0.05,
   zoomOut: SEC.box.end,
-  priceIn: W("69", "l05a") - 0.15,
-  priceOut: SEC.expert.end,
+  priceIn: W("69", "s02b") - 0.2,
+  priceOut: SEC.box.end,
   expertIn: W("Experten") - 0.1,
-  expertOut: SEC.expert.end,
-  witnessIn: SEC.witness.start,
-  witnessOut: SEC.witness.end,
-  detailsA: [W("550", "l07a"), W("Winterjacke")],
-  detailsAOut: SEC.quality.end,
-  detailsB: [W("Hand"), W("100")],
-  detailsBOut: SEC.stitch.end,
-  restockDark: SEC.restock.start,
-  restockHead: W("Basic") - 0.1,
+  expertOut: SEC.box.end,
+  details: [W("550"), W("Hand"), W("Winterjacke")],
+  detailsOut: SEC.quality.end,
+  restockHead: SEC.restock.start,
   prints: [W("Navy"), W("Schwarz"), W("Grau")],
+  restockPrice: W("69", "s04b") - 0.1,
   restockEnd: SEC.restock.end,
   extras: SEC.extras.start,
-  denim: W("Denim") - 0.6,
-  longsleeve: W("Longsleeves") - 0.4,
-  nylon: W("Nylon") - 0.3,
-  restockPrice: W("69", "l10b") - 0.1,
+  denim: W("Denim") - 0.5,
+  longsleeve: W("Longsleeves") - 0.2,
+  nylon: W("Nylon") - 0.2,
   pass: SEC.password.start,
-  wallet: W("Liste") - 0.1,
+  wallet: W("Passwort", "s06a") - 0.1,
   bar: W("80") - 0.1,
   follow: SEC.follow.start,
-  dmType: W("Passwort", "l13a") - 0.2,
+  dmType: W("Passwort", "s07") - 0.2,
   followTap: W("folg"),
-  twenty: W("20") - 0.1,
   outro: SEC.outro.start,
-  logo: SEC.outro.voiceEnd + 1.1,
+  logo: SEC.outro.voiceEnd + 0.45,
   end: TL.total,
 };
 export const NEWS_FRAMES = f(T.end);
@@ -159,12 +153,7 @@ const DetailGroup: React.FC<{ words: string[]; at: number[]; out: number; top: n
     </div>
   );
 };
-const DetailWords: React.FC = () => (
-  <>
-    <DetailGroup words={["550 GSM.", "KEINE WINTERJACKE."]} at={T.detailsA} out={T.detailsAOut} top={560} />
-    <DetailGroup words={["VON HAND BESTICKT.", "100 % BAUMWOLLE."]} at={T.detailsB} out={T.detailsBOut} top={560} />
-  </>
-);
+const DetailWords: React.FC = () => <DetailGroup words={["550 GSM.", "VON HAND BESTICKT.", "KEINE WINTERJACKE."]} at={T.details} out={T.detailsOut} top={560} />;
 const DetailWord: React.FC<{ w: string; at: number }> = ({ w, at }) => {
   const p = useIn(at, 0.35);
   return (
@@ -314,7 +303,7 @@ const Follow: React.FC = () => {
   const sent = interpolate(fr, [f(sentAt), f(sentAt + 0.3)], [0, 1], { ...clamp, easing: OUT });
   const followed = fr >= f(T.followTap);
   const tap = interpolate(fr, [f(T.followTap - 0.08), f(T.followTap), f(T.followTap + 0.12)], [1, 0.94, 1], clamp);
-  const twenty = interpolate(fr, [f(T.twenty), f(T.twenty + 0.4)], [0, 1], { ...clamp, easing: OUT });
+  const twenty = 0;
   return (
     <AbsoluteFill style={{ background: "#FFFFFF", opacity: inP }}>
       {/* Profilkopf */}
@@ -465,18 +454,17 @@ const Captions: React.FC = () => {
   );
 };
 
-export type NewsProps = { voice?: string; voiceVol?: number };
+export type NewsProps = { voice?: string; voiceVol?: number; musicVol?: number };
 
-export const SaliteNews: React.FC<NewsProps> = ({ voice = "shm/voice.wav", voiceVol = 1 }) => {
+export const SaliteNews: React.FC<NewsProps> = ({ voice = "shm/voice.wav", voiceVol = 1, musicVol = 1 }) => {
   loadFonts();
   const fr = useCurrentFrame();
   // Zoomsprung auf dem betonten Wort
   const zoom = fr >= f(T.zoom) && fr < f(T.zoomOut) ? 1.1 : 1;
-  // Augenzeuge: langsames Hineinfahren über Reaktion und Standbild
-  const push = interpolate(fr, [f(T.witnessIn), f(T.witnessOut)], [1, 1.08], clamp);
-  const scale = zoom * (fr >= f(T.witnessIn) && fr < f(T.witnessOut) ? push : 1);
+  const scale = zoom;
   // Musik: leise, unter Vollbild-Grafik 3 dB lauter, vor dem Abgang weg
-  const bedVol = (fr2: number) => (fr2 >= f(T.pass) && fr2 < f(T.outro) ? 0.17 : 0.12) * interpolate(fr2, [f(T.outro), f(T.outro + 1.2)], [1, 0], clamp);
+  // Beat: hörbar (Kunde), endet vor dem Abgang; in der Endmischung kommt er als eigene Spur mit Ducking dazu
+  const bedVol = (fr2: number) => musicVol * 0.5 * interpolate(fr2, [f(T.outro + 1.0), f(T.outro + 2.0)], [1, 0], clamp);
   const typeStart = T.dmType;
   return (
     <AbsoluteFill style={{ background: "#000" }}>
@@ -488,7 +476,6 @@ export const SaliteNews: React.FC<NewsProps> = ({ voice = "shm/voice.wav", voice
         <Breaking />
         <PriceCard />
         <LowerThird start={T.expertIn} end={T.expertOut} label="SALITE NEWS" title="EXPERTEN WARNEN" />
-        <LowerThird start={T.witnessIn} end={T.witnessOut} label="AUGENZEUGE" title="SPRACHLOS" />
         <DetailWords />
         <Restock />
       </Sequence>
@@ -501,12 +488,11 @@ export const SaliteNews: React.FC<NewsProps> = ({ voice = "shm/voice.wav", voice
       <Captions />
 
       {/* Ton */}
-      <Audio src={staticFile("bfa/news_bed.wav")} volume={(fr2) => bedVol(fr2)} />
+      {musicVol > 0 && <Audio src={staticFile("shm/news_beat.wav")} volume={(fr2) => bedVol(fr2)} />}
       <Audio src={staticFile(voice)} volume={voiceVol} />
       <Sfx at={0.12} src="news_gong.wav" vol={0.08} len={1.6} />
       <Sfx at={T.zoom} src="hit_low.wav" vol={0.08} />
       <Sfx at={T.priceIn + 0.25} src="tick.wav" vol={0.2} len={0.4} />
-      <Sfx at={T.witnessIn} src="click.wav" vol={0.18} len={0.4} />
       {T.prints.map((p) => (
         <Sfx key={p} at={p} src="tick.wav" vol={0.14} len={0.4} />
       ))}

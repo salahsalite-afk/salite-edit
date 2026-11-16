@@ -15,9 +15,9 @@ import soundfile as sf
 
 sel_dir, lines_p, voice_out, tl_out = sys.argv[1:5]
 SR = 48000
-LEAD = 0.3  # Gong vor dem ersten Wort
-GAP_IN = 0.12
-GAP_SEC = 0.25
+LEAD = 0.2  # Gong vor dem ersten Wort
+GAP_IN = 0.06
+GAP_SEC = 0.12
 PINK = "bf/pink.mp4"
 BARBER = "shm/barber.mp4"
 RUNWAY = "shm/runway.mp4"  # 4K-Runway-Film, mittig auf 9:16 zugeschnitten
@@ -37,9 +37,36 @@ SECTIONS = [
     ("follow", ["l13a", "l14a"], []),
     ("outro", ["l15a", "l15b"], []),
 ]
-TAIL = 2.6  # Stille und Logo nach dem letzten Wort
+# Kurzfassung 30 bis 40 s (Kunde): ohne Aufsteh-Szene und "gecookt"
+SHORT = [
+    ("hook", ["s01"], [(PINK, 0.0, 4.715)]),
+    ("box", ["s02a", "s02b"], [(PINK, 3.3, 8.298), (PINK, 8.298, 10.25), (PINK, 14.78, 17.05)]),
+    ("quality", ["s03a", "s03b"], [(PINK, 17.05, 18.4), (BARBER, 2.2, 4.16), (BARBER, 11.8, 17.1)]),
+    ("restock", ["s04a", "s04b"], [(RUNWAY, 0.3, 1.8), (RUNWAY, 4.0, 6.5), (RUNWAY, 30.6, 34.3)]),
+    ("extras", ["s05a", "s05b", "s05c"], [(RUNWAY, 8.0, 11.4), (RUNWAY, 14.0, 19.0)]),
+    ("password", ["s06a", "s06b"], []),
+    ("follow", ["s07"], []),
+    ("outro", ["s08"], []),
+]
+if "s01" in [l["id"] for l in json.load(open(lines_p))]:
+    SECTIONS = SHORT
+TAIL = 1.5  # kurze Stille und Logo nach dem letzten Wort
 
+import os
+import subprocess
+
+PITCH = 2 ** (-2.5 / 12)  # 2,5 Halbtöne tiefer: seriöser, tiefer (Kunde)
+SPEED = 1.0  # Tempo neutral (Kunde)
+proc_dir = f"{sel_dir}/proc"
+os.makedirs(proc_dir, exist_ok=True)
 sel = json.load(open(f"{sel_dir}/auswahl.json"))
+for sid, info in sel.items():
+    src = f"{sel_dir}/{sid}.wav"
+    if not os.path.exists(src):
+        continue
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", src, "-af", f"asetrate=24000*{PITCH},aresample=24000,atempo={SPEED / PITCH}", f"{proc_dir}/{sid}.wav"], check=True)
+    info["dauer"] = round(info["dauer"] / SPEED, 3)
+    info["woerter"] = [{**w, "s": round(w["s"] / SPEED, 3), "e": round(w["e"] / SPEED, 3)} for w in info["woerter"]]
 show = {l["id"]: l["show"] for l in json.load(open(lines_p))}
 
 voice = []
@@ -85,6 +112,10 @@ for si, (name, ids, footage) in enumerate(SECTIONS):
                 dur = end - at
             if dur <= 0.02:
                 break
+            if dur < 0.5 and clips and clips[-1]["at"] + clips[-1]["dur"] >= at - 1e-6 and clips[-1].get("rate") == 1.0:
+                clips[-1]["dur"] = round(clips[-1]["dur"] + dur, 4)  # zu kurzer Rest: vorherigen Schnitt verlängern
+                at += dur
+                break
             clips.append({"src": src, "from": a, "rate": round(rate, 4), "at": round(at, 4), "dur": round(dur, 4)})
             at += dur
         if at < end - 0.02:  # zu wenig: letztes Bild stehen lassen
@@ -98,7 +129,7 @@ out = np.zeros(int(total * SR) + SR)
 from scipy.signal import resample_poly
 
 for v in voice:
-    w, sr = sf.read(f"{sel_dir}/{v['id']}.wav")
+    w, sr = sf.read(f"{proc_dir}/{v['id']}.wav")
     if w.ndim > 1:
         w = w.mean(1)
     w = resample_poly(w.astype(np.float32), SR // 1000, sr // 1000)
