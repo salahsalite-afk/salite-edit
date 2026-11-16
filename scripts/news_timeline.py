@@ -31,7 +31,7 @@ SECTIONS = [
     ("quality", ["l07a", "l07b"], [(PINK, 14.78, 19.18), (PINK, 19.18, 23.6)]),
     ("stitch", ["l08a"], [(BARBER, 2.2, 4.16), (BARBER, 11.8, 17.1)]),
     ("restock", ["l09a", "l09b", "l10a", "l10b"], [(RUNWAY, 0.3, 1.8), (RUNWAY, 4.0, 7.0), (RUNWAY, 11.4, 12.9), (RUNWAY, 30.6, 34.3)]),
-    ("extras", ["l10c", "l10d"], []),
+    ("extras", ["l10c", "l10d", "l10e"], [(RUNWAY, 13.0, 19.6)]),
     ("password", ["l11a", "l12a"], []),
     ("follow", ["l13a", "l14a"], []),
     ("outro", ["l15a", "l15b"], []),

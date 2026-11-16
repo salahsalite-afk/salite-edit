@@ -45,6 +45,7 @@ export const T = {
   extras: SEC.extras.start,
   denim: W("Denim") - 0.6,
   longsleeve: W("Longsleeves") - 0.4,
+  nylon: W("Nylon") - 0.3,
   restockPrice: W("69", "l10b") - 0.1,
   pass: SEC.password.start,
   wallet: W("Liste") - 0.1,
@@ -212,32 +213,43 @@ const RestockPrice: React.FC = () => {
   );
 };
 
-// ---------- Weitere Teile im Drop: Produktkarten wie im Shop ----------
-const PRODUCTS = [
-  { at: () => T.denim, img: "shm/prod/denim.png", name: "JAPANESE DENIM", old: "80 €", now: "30 €" },
-  { at: () => T.longsleeve, img: "shm/prod/ls_black.png", img2: "shm/prod/ls_white.png", name: "BASIC LONGSLEEVE", old: "39 €", now: "25 €" },
+// ---------- Weitere Teile im Drop: Preisliste wie eine Menükarte über Runway-Material ----------
+const ITEMS = [
+  { at: () => T.denim, name: "JAPANESE DENIM", old: "80 €", now: "30 €" },
+  { at: () => T.longsleeve, name: "BASIC LONGSLEEVE", old: "39 €", now: "25 €" },
+  { at: () => T.nylon, name: "NYLON TRACKSUIT", old: "", now: "69 €" },
 ];
 const Extras: React.FC = () => {
   const fr = useCurrentFrame();
-  const second = fr >= f(T.longsleeve);
-  const pr = second ? PRODUCTS[1] : PRODUCTS[0];
-  const p = interpolate(fr, [f(pr.at()), f(pr.at() + 0.45)], [0, 1], { ...clamp, easing: OUT });
-  const red = interpolate(fr, [f(pr.at() + 0.5), f(pr.at() + 0.9)], [0, 1], { ...clamp, easing: OUT });
+  const bg = interpolate(fr, [f(T.extras), f(T.extras + 0.5)], [0, 1], { ...clamp, easing: OUT });
+  const o = interpolate(fr, [f(T.pass - 0.3), f(T.pass)], [1, 0], clamp);
   return (
-    <AbsoluteFill style={{ background: "#E9E9E8" }}>
-      <div style={{ position: "absolute", top: 300, left: 0, right: 0, textAlign: "center", fontFamily: "'Inter'", fontWeight: 700, fontSize: 22, letterSpacing: "0.3em", color: "#555" }}>AUSSERDEM IM DROP</div>
-      <div style={{ position: "absolute", top: 360, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 20, opacity: p, transform: `scale(${0.96 + 0.04 * p})` }}>
-        <Img src={staticFile(pr.img)} style={{ width: pr.img2 ? 470 : 760, height: pr.img2 ? 470 : 760, objectFit: "contain" }} />
-        {pr.img2 && <Img src={staticFile(pr.img2)} style={{ width: 470, height: 470, objectFit: "contain" }} />}
-      </div>
-      <div style={{ position: "absolute", top: pr.img2 ? 880 : 1140, left: 0, right: 0, textAlign: "center", opacity: p }}>
-        <div style={{ fontFamily: "'Anton'", fontSize: 84, color: INK, lineHeight: 1 }}>{pr.name}</div>
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 22, marginTop: 18 }}>
-          <div style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 40, color: "#777", textDecoration: "line-through", textDecorationColor: RED, textDecorationThickness: 4 }}>{pr.old}</div>
-          <div style={{ background: RED, color: "#FFFFFF", fontFamily: "'Inter'", fontWeight: 800, fontSize: 54, padding: "2px 18px", opacity: red, transform: `scale(${0.7 + 0.3 * red})` }}>{pr.now}</div>
-        </div>
+    <AbsoluteFill style={{ opacity: o }}>
+      <AbsoluteFill style={{ background: `rgba(10,10,10,${0.58 * bg})` }} />
+      <div style={{ position: "absolute", top: 470, left: 90, right: 150, opacity: bg }}>
+        <div style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 24, letterSpacing: "0.3em", color: "rgba(255,255,255,0.8)", textAlign: "center" }}>AUSSERDEM IM DROP</div>
+        <div style={{ height: 2, background: "rgba(255,255,255,0.5)", marginTop: 26 }} />
+        {ITEMS.map((it) => (
+          <ExtraRow key={it.name} {...it} />
+        ))}
       </div>
     </AbsoluteFill>
+  );
+};
+const ExtraRow: React.FC<{ at: () => number; name: string; old: string; now: string }> = ({ at, name, old, now }) => {
+  const p = useIn(at(), 0.4);
+  const red = useIn(at() + 0.35, 0.35);
+  return (
+    <div style={{ opacity: p, transform: `translateY(${(1 - p) * 16}px)` }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "26px 0" }}>
+        <div style={{ fontFamily: "'Anton'", fontSize: 58, color: "#FFFFFF", lineHeight: 1 }}>{name}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {old && <div style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 32, color: "rgba(255,255,255,0.7)", textDecoration: "line-through", textDecorationColor: RED, textDecorationThickness: 3 }}>{old}</div>}
+          <div style={{ background: RED, color: "#FFFFFF", fontFamily: "'Inter'", fontWeight: 800, fontSize: 40, padding: "2px 14px", opacity: red, transform: `scale(${0.7 + 0.3 * red})` }}>{now}</div>
+        </div>
+      </div>
+      <div style={{ height: 1, background: "rgba(255,255,255,0.35)" }} />
+    </div>
   );
 };
 
@@ -431,7 +443,7 @@ const Captions: React.FC = () => {
   const t = fr / FPS;
   const c = CAPS.find((k) => t >= k.s - 0.02 && t < k.e);
   if (!c) return null;
-  const light = t >= T.extras && t < T.outro; // helle Vollbild-Grafik: dunkle Schrift
+  const light = t >= T.pass && t < T.outro; // helle Vollbild-Grafik: dunkle Schrift
   return (
     <div style={{ position: "absolute", left: 60, right: 140, bottom: 420, display: "flex", justifyContent: "center" }}>
       <div
@@ -491,25 +503,24 @@ export const SaliteNews: React.FC<NewsProps> = ({ voice = "shm/voice.wav", voice
       {/* Ton */}
       <Audio src={staticFile("bfa/news_bed.wav")} volume={(fr2) => bedVol(fr2)} />
       <Audio src={staticFile(voice)} volume={voiceVol} />
-      <Sfx at={0.12} src="news_gong.wav" vol={0.22} len={1.6} />
-      <Sfx at={T.zoom} src="hit_low.wav" vol={0.12} />
+      <Sfx at={0.12} src="news_gong.wav" vol={0.08} len={1.6} />
+      <Sfx at={T.zoom} src="hit_low.wav" vol={0.08} />
       <Sfx at={T.priceIn + 0.25} src="tick.wav" vol={0.2} len={0.4} />
       <Sfx at={T.witnessIn} src="click.wav" vol={0.18} len={0.4} />
       {T.prints.map((p) => (
         <Sfx key={p} at={p} src="tick.wav" vol={0.14} len={0.4} />
       ))}
       <Sfx at={T.restockPrice} src="tick.wav" vol={0.18} len={0.4} />
-      <Sfx at={T.extras} src="whoosh_soft.wav" vol={0.1} len={0.8} />
-      <Sfx at={T.denim + 0.5} src="tick.wav" vol={0.18} len={0.4} />
-      <Sfx at={T.longsleeve} src="whoosh_soft.wav" vol={0.1} len={0.8} />
-      <Sfx at={T.longsleeve + 0.5} src="tick.wav" vol={0.18} len={0.4} />
+      {[T.denim, T.longsleeve, T.nylon].map((a) => (
+        <Sfx key={a} at={a + 0.35} src="tick.wav" vol={0.16} len={0.4} />
+      ))}
       <Sfx at={T.pass} src="hit_low.wav" vol={0.1} />
       <Sfx at={T.bar + 1.1} src="tick.wav" vol={0.2} len={0.4} />
       {Array.from({ length: 8 }, (_, i) => (
         <Sfx key={`k${i}`} at={typeStart + i * 0.11} src={`keyboard_tap${(i % 3) + 1}.wav`} vol={0.16} len={0.2} />
       ))}
       <Sfx at={T.dmType + 8 * 0.11 + 0.25} src="click.wav" vol={0.16} len={0.4} />
-      <Sfx at={T.followTap} src="notify.wav" vol={0.16} len={1} />
+      <Sfx at={T.followTap} src="notify.wav" vol={0.09} len={1} />
       <Sfx at={T.logo} src="hit_low.wav" vol={0.08} />
     </AbsoluteFill>
   );
