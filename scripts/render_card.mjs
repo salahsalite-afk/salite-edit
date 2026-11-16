@@ -6,11 +6,17 @@ import path from "node:path";
 import fs from "node:fs/promises";
 const [outDir, mode, id, ...secs] = process.argv.slice(2);
 const browserExecutable = "/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell";
-const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts"), publicDir: path.resolve("public_card"), enableCaching: false });
+const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts"), publicDir: path.resolve(process.env.PUBLIC ?? "public_card"), enableCaching: false });
+try {
 const composition = await selectComposition({ serveUrl, id, browserExecutable });
-if (mode === "video") {
+if (mode === "audio") {
+  // nur Ton (WAV), für die Mischung mit ffmpeg
+  const out = path.join(outDir, `${secs[0] ?? id}.wav`);
+  await renderMedia({ serveUrl, composition, codec: "wav", outputLocation: out, concurrency: 1, browserExecutable });
+  console.log("ok", out);
+} else if (mode === "video") {
   const out = path.join(outDir, `${secs[0] ?? id}.mp4`);
-  await renderMedia({ serveUrl, composition, codec: "h264", crf: 16, pixelFormat: "yuv420p", outputLocation: out, concurrency: Number(process.env.CONC ?? 4), browserExecutable });
+  await renderMedia({ serveUrl, composition, codec: "h264", crf: 16, pixelFormat: "yuv420p", colorSpace: "bt709", outputLocation: out, concurrency: Number(process.env.CONC ?? 4), browserExecutable, muted: process.env.MUTED === "1", onProgress: ({ renderedFrames }) => { if (renderedFrames % 300 === 0) console.log("frame", renderedFrames); } });
   console.log("ok", out);
 } else {
   for (const s of secs) {
@@ -19,5 +25,7 @@ if (mode === "video") {
     console.log("ok", output);
   }
 }
-// eigenes Bundle wieder entfernen, damit der Speicher nicht vollläuft
-await fs.rm(serveUrl, { recursive: true, force: true });
+} finally {
+  // eigenes Bundle immer entfernen, auch bei Fehlern, damit der Speicher nicht vollläuft
+  await fs.rm(serveUrl, { recursive: true, force: true });
+}

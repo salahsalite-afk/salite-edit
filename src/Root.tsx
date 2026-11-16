@@ -9,6 +9,7 @@ import { Mockup } from "./card/TracksuitMockup";
 import { FIT_STORY, FIT_STORY_DEFAULT, FitStory, fitStoryFrames } from "./story/FitStory";
 import { LINEUP, LINEUP_DEFAULT, LineupPan, lineupFrames } from "./story/LineupPan";
 import { FIT_SINGLE, FIT_SINGLE_DEFAULT, FitSingle } from "./story/FitSingle";
+import { FPS as NEWS_FPS, NEWS_FRAMES, SaliteNews } from "./bf/SaliteNews";
 import { BEAMER, SafetyBeamer } from "./card/SafetyBeamer";
 import { BEAMER_CLEAN, SafetyBeamerClean } from "./card/SafetyBeamerClean";
 import { COMIC_CARD, COMIC_SLIDES, SafetyComicCard, SafetyComicSlides } from "./card/SafetyComic";
@@ -68,6 +69,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="FitSingle" component={FitSingle} defaultProps={FIT_SINGLE_DEFAULT} fps={FIT_SINGLE.fps} width={FIT_SINGLE.width} height={FIT_SINGLE.height} durationInFrames={FIT_SINGLE.frames} />
     <Composition id="FitSingleCurtain" component={FitSingle} defaultProps={{ ...FIT_SINGLE_DEFAULT, backdrop: "curtain" as const }} fps={FIT_SINGLE.fps} width={FIT_SINGLE.width} height={FIT_SINGLE.height} durationInFrames={FIT_SINGLE.frames} />
     <Composition id="FitSingleSilver" component={FitSingle} defaultProps={{ ...FIT_SINGLE_DEFAULT, backdrop: "silver" as const }} fps={FIT_SINGLE.fps} width={FIT_SINGLE.width} height={FIT_SINGLE.height} durationInFrames={FIT_SINGLE.frames} />
+    {/* SALITE News: Pink Trackie als Nachrichtenbeitrag, TikTok 1080x1920, 60 fps wie die Quelle */}
+    <Composition id="SaliteNews" component={SaliteNews} defaultProps={{}} fps={NEWS_FPS} width={1080} height={1920} durationInFrames={NEWS_FRAMES} />
     {/* Digitales Tracksuit-Mockup (transparent), je Farbe */}
     {(["grey", "black", "bordeaux", "pink"] as const).map((c) => (
       <Composition key={c} id={`Mockup-${c}`} component={Mockup} defaultProps={{ color: c }} fps={30} width={1200} height={1800} durationInFrames={1} />
