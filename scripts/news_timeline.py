@@ -20,6 +20,7 @@ GAP_IN = 0.22
 GAP_SEC = 0.42
 PINK = "bf/pink.mp4"
 BARBER = "shm/barber.mp4"
+RUNWAY = "shm/runway.mp4"  # 4K-Runway-Film, mittig auf 9:16 zugeschnitten
 
 # Abschnitte: Sätze und Bildmaterial (Quelle, von, bis) in Reihenfolge
 SECTIONS = [
@@ -27,9 +28,10 @@ SECTIONS = [
     ("box", ["l04a"], [(PINK, 4.715, 8.298)]),
     ("expert", ["l05a", "l05b", "l06a"], [(PINK, 8.298, 14.07)]),
     ("witness", ["l06b"], [(PINK, 14.07, 14.78)]),
-    ("quality", ["l07a", "l07b"], [(PINK, 14.78, 19.18)]),
+    ("quality", ["l07a", "l07b"], [(PINK, 14.78, 19.18), (PINK, 19.18, 23.6)]),
     ("stitch", ["l08a"], [(BARBER, 2.2, 4.16), (BARBER, 11.8, 17.1)]),
-    ("restock", ["l09a", "l09b", "l10a", "l10b"], [(PINK, 19.18, 24.4), (BARBER, 5.14, 11.78)]),
+    ("restock", ["l09a", "l09b", "l10a", "l10b"], [(RUNWAY, 0.3, 1.8), (RUNWAY, 4.0, 7.0), (RUNWAY, 11.4, 12.9), (RUNWAY, 30.6, 34.3)]),
+    ("extras", ["l10c", "l10d"], []),
     ("password", ["l11a", "l12a"], []),
     ("follow", ["l13a", "l14a"], []),
     ("outro", ["l15a", "l15b"], []),
@@ -92,13 +94,13 @@ total = round(t + TAIL, 3)
 
 # Sprachspur zusammensetzen (48 kHz)
 out = np.zeros(int(total * SR) + SR)
-import librosa
+from scipy.signal import resample_poly
 
 for v in voice:
     w, sr = sf.read(f"{sel_dir}/{v['id']}.wav")
     if w.ndim > 1:
         w = w.mean(1)
-    w = librosa.resample(w.astype(np.float32), orig_sr=sr, target_sr=SR)
+    w = resample_poly(w.astype(np.float32), SR // 1000, sr // 1000)
     i = int(v["at"] * SR)
     out[i : i + len(w)] += w[: len(out) - i]
 out = out[: int(total * SR)]
