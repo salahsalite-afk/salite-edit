@@ -56,6 +56,7 @@ Regeln:
 - Untertitel: wie native iPhone/Instagram Untertitel, damit es vertrauenswürdig wirkt. Schrift Inter (Google Font, am nächsten an SF Pro), Gewicht 600, ALLES IN GROSSBUCHSTABEN, reines Weiß, nur ein dezenter dunkler Schatten, keine Hervorhebung einzelner Wörter. Eine Zeile, höchstens 3 Wörter. Mittig, unten direkt über der sicheren Zone (Unterkante bei 1920 minus 420 px), nie in der Bildmitte.
 - Texte kurz und geladen. Keine Gedankenstriche, keine Schrägstriche.
 - Feines Filmkorn auf allen Grafik Szenen (Deckkraft 6 bis 8 Prozent), damit nichts steril wirkt.
+- Beat-Edits schlicht halten: keine Hinweis-Pfeile, kein Glitzer, keine Pillen, kein Schnee. Gesagtes mit echten Bildern zeigen (Vollbild oder 75 bis 90 % Breite), auf den Beat geschnitten (Kunde, LEARNINGS 27).
 
 ## 4. Bewegung
 

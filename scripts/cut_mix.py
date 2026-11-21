@@ -26,16 +26,17 @@ def b(k):
     return DROP + k * BEAT
 
 
-# gleiche Segmente wie in CutBeat.tsx: (Clip, Quelle, Ausgabe, Dauer, Ton an)
+# Stimmen: (Clip, Quelle, Ausgabe, Dauer, Ton an). Stimme läuft unter den Bildern weiter.
+# Clip 6 ab 1,88 s: "Wir sind um 18:30 Uhr live" ist raus (Kunde), Clip 4 (Treppe) ohne Ton.
 SEGS = [
     (1, 0.0, 0.0, DROP, True),
     (2, 0.0, b(0), 4 * BEAT, True),
-    (3, 0.12, b(4), 7 * BEAT, True),
-    (4, 0.0, b(11), 4 * BEAT, False),
-    (5, 0.06, b(15), 8 * BEAT, True),
-    (6, 0.0, b(23), 6.85, True),
+    (3, 0.12, b(4), 3.38, True),
+    (4, 0.0, b(12), 4 * BEAT, False),
+    (5, 0.0, b(16), 8 * BEAT, True),
+    (6, 1.88, b(24), 6.84 - 1.88, True),
 ]
-TOTAL = b(40)
+TOTAL = b(36)
 N = int(round(TOTAL * SR))
 
 
@@ -132,22 +133,12 @@ bt *= 10 ** ((-20 - lb) / 20)
 # 3) Effekte: (Zeit, Datei, Ziel in dB relativ zur Stimme)
 SFX = [
     (0.0, f"{sfx_dir}/whoosh_soft.wav", -20),
-    (0.95, f"{cut}/snd/ping.wav", -20),
-    (1.30, f"{cut}/snd/ping.wav", -21),
-    (1.65, f"{cut}/snd/ping.wav", -22),
-    (2.00, f"{cut}/snd/ping.wav", -22),
     (DROP - 0.55, f"{sfx_dir}/riser_short.wav", -16),
     (DROP, f"{cut}/snd/drop.wav", -9),
-    (4.30, f"{cut}/snd/pop.wav", -16),
-    (5.45, f"{cut}/snd/shimmer.wav", -18),
-    (7.40, f"{sfx_dir}/whoosh_soft.wav", -18),
-    (b(11) - 0.05, f"{sfx_dir}/whoosh_soft.wav", -16),
-    (b(15) - 0.5, f"{sfx_dir}/riser_short.wav", -18),
-    (10.96, f"{sfx_dir}/hit_low.wav", -16),
-    (12.40, f"{cut}/snd/wind.wav", -18),
-    (14.30, f"{sfx_dir}/notify.wav", -16),
-    (16.30, f"{sfx_dir}/click.wav", -18),
-    (19.10, f"{sfx_dir}/tick.wav", -20),
+    (b(12) - 0.05, f"{sfx_dir}/whoosh_soft.wav", -16),
+    (b(16) - 0.5, f"{sfx_dir}/riser_short.wav", -18),
+    (11.376, f"{sfx_dir}/hit_low.wav", -16),
+    (b(32), f"{sfx_dir}/notify.wav", -16),
 ]
 
 

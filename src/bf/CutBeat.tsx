@@ -1,9 +1,11 @@
 import React from "react";
-import { AbsoluteFill, Easing, Freeze, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, Freeze, Img, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { loadFonts } from "../story/LineupPan";
 
-// Beat-Schnitt: 6 Clips in Reihenfolge, Schnitte auf dem Beat (136 BPM, Schlag 0,441 s), Drop nach Clip 1.
-// Zoom-Wechsel als Perspektive, Takt-Puls, Animationen passend zum Gesagten. Ton (Stimmen, Beat, Effekte) mischt scripts/cut_mix.py, das Bild wird stumm gerendert.
+// Beat-Schnitt: Clips Nummer 1 bis 6 in Reihenfolge, Schnitte auf dem Beat (136 BPM, Schlag 0,441 s), Drop nach Clip 1.
+// Version 2 (Kundenwunsch): schlicht. Keine Pfeile, kein Glitzer, keine Pillen. Statt Effekten echte Bilder im Vollbild
+// oder bei 90 % Breite, auf den Beat geschnitten. "18:30 Uhr live" ist raus, am Ende der TikTok-Account @sj_salite.
+// Ton (Stimmen, Beat, Effekte) mischt scripts/cut_mix.py, das Bild wird stumm gerendert.
 export const CB = { fps: 60, width: 1080, height: 1920 };
 const f = (s: number) => Math.round(s * CB.fps);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
@@ -13,40 +15,46 @@ const ease = (t: number, a: number, len = 0.2, e = OUT) => interpolate(t, [a, a 
 
 export const BEAT = 0.441;
 export const DROP = 3.62; // Ausgabezeit des Drops (Beat-Zeit 6,79)
-export const BEAT_OFFSET = 6.79 - DROP; // Beat startet bei 3,17 s
 const b = (k: number) => DROP + k * BEAT;
-
-// Segmente: Quelle, Ausgabe, Tempo
-type Seg = { clip: number; src: number; out: number; dur: number; rate: number; freeze?: boolean };
-export const SEGS: Seg[] = [
-  { clip: 1, src: 0, out: 0, dur: DROP, rate: 1 },
-  { clip: 2, src: 0, out: b(0), dur: 4 * BEAT, rate: 1 },
-  { clip: 3, src: 0.12, out: b(4), dur: 7 * BEAT, rate: 1 },
-  { clip: 4, src: 0, out: b(11), dur: 4 * BEAT, rate: 2.45 / (4 * BEAT) },
-  { clip: 5, src: 0.06, out: b(15), dur: 8 * BEAT, rate: 1 },
-  { clip: 6, src: 0, out: b(23), dur: 6.85, rate: 1 },
-];
-const END_FREEZE = b(40) - (b(23) + 6.85);
-export const CB_TOTAL = b(40);
+export const CB_TOTAL = b(36);
 export const CB_FRAMES = f(CB_TOTAL);
 
-// Zoom-Plan: Stützpunkte (Zeit, Fokus im Bild, Zielpunkt auf dem Schirm, Skalierung)
+// Einstellungen in Reihenfolge. clip: Quelle n1..n6 bzw. schnee; img: Bild (full = 9:16 Vollbild, card = 90 % Breite)
+type Shot =
+  | { kind: "clip"; file: string; src: number; a: number; e: number; rate?: number; zoom: K[] }
+  | { kind: "img"; file: string; a: number; e: number; mode: "full" | "card"; w?: number; h?: number; cy?: number };
 type K = { t: number; fx: number; fy: number; tx: number; ty: number; s: number };
 const K0 = (t: number, s = 1): K => ({ t, fx: 540, fy: 960, tx: 540, ty: 960, s });
-const ZOOM: K[][] = [
-  // 1: Einstieg mit Stoß, langsam rein, vor dem Drop schneller
-  [K0(0, 1.12), K0(0.35, 1.0), K0(0.9, 1.0), { t: 3.15, fx: 540, fy: 640, tx: 540, ty: 700, s: 1.08 }, { t: 3.6, fx: 540, fy: 640, tx: 540, ty: 700, s: 1.2 }],
-  // 2: Drop, dann Sprung auf das Brust-Logo bei "Puff"
-  [K0(b(0), 1.12), K0(b(0) + 0.35, 1.02), K0(4.2, 1.03), { t: 4.36, fx: 620, fy: 720, tx: 620, ty: 760, s: 1.5 }, { t: 5.38, fx: 620, fy: 720, tx: 620, ty: 760, s: 1.58 }],
-  // 3: Steine (Brust), dann runter zu den Schuhen
-  [K0(b(4), 1.0), { t: 6.3, fx: 640, fy: 760, tx: 560, ty: 820, s: 1.42 }, { t: 7.08, fx: 630, fy: 740, tx: 560, ty: 820, s: 1.42 }, { t: 7.45, fx: 560, fy: 1100, tx: 540, ty: 960, s: 1.1 }, { t: 8.47, fx: 560, fy: 1100, tx: 540, ty: 960, s: 1.14 }],
-  // 4: Treppe, durchgehend rein
-  [K0(b(11), 1.0), K0(b(15), 1.18)],
-  // 5: Totale, Sprung auf "550", raus bei "Winterjacke"
-  [K0(b(15), 1.0), K0(10.86, 1.0), { t: 10.98, fx: 930, fy: 760, tx: 640, ty: 820, s: 1.5 }, { t: 12.45, fx: 930, fy: 760, tx: 640, ty: 820, s: 1.56 }, { t: 12.75, fx: 540, fy: 900, tx: 540, ty: 900, s: 1.04 }, K0(b(23), 1.0)],
-  // 6: Gesicht bei "live", Paket bei "verpacken", raus beim Account
-  [K0(b(23), 1.0), K0(15.05, 1.02), { t: 15.17, fx: 560, fy: 420, tx: 540, ty: 640, s: 1.3 }, { t: 15.7, fx: 560, fy: 420, tx: 540, ty: 640, s: 1.33 }, { t: 15.95, fx: 480, fy: 1350, tx: 540, ty: 1000, s: 1.28 }, { t: 18.95, fx: 480, fy: 1350, tx: 540, ty: 1000, s: 1.34 }, K0(19.25, 1.0), K0(CB_TOTAL, 1.05)],
+const KF = (t: number, fx: number, fy: number, tx: number, ty: number, s: number): K => ({ t, fx, fy, tx, ty, s });
+const J = 1 / 60; // ein Frame: Zoomsprung
+
+const N6_IN = 1.88; // "wir verpacken ..." (ohne "Wir sind um 18:30 Uhr live")
+export const SHOTS: Shot[] = [
+  // 1: Hook, zwei Zoomsprünge, vor dem Drop langsam rein
+  { kind: "clip", file: "n1", src: 0, a: 0, e: b(0), zoom: [K0(0, 1.12), K0(0.3, 1.0), K0(0.9 - J, 1.0), KF(0.9, 540, 900, 540, 960, 1.12), KF(1.96 - J, 540, 900, 540, 960, 1.13), K0(1.96, 1.0), K0(2.9, 1.0), KF(3.6, 540, 640, 540, 700, 1.2)] },
+  // 2: Drop, Sprung auf das Brust-Logo bei "Puff"
+  { kind: "clip", file: "n2", src: 0, a: b(0), e: b(4), zoom: [K0(b(0), 1.12), K0(b(0) + 0.35, 1.02), K0(4.28 - J, 1.03), KF(4.28, 620, 720, 620, 760, 1.45), KF(b(4), 620, 720, 620, 760, 1.5)] },
+  // 3: Glitzersteine (Clip), dann Bild Glitzersteine, Stack, Stack aus dem Chat
+  { kind: "clip", file: "n3", src: 0.12, a: b(4), e: b(6), zoom: [K0(b(4), 1.0), KF(b(6), 640, 760, 560, 820, 1.15)] },
+  { kind: "img", file: "glitzer", a: b(6), e: b(8), mode: "card", w: 1024, h: 1536 },
+  { kind: "img", file: "stack", a: b(8), e: b(10), mode: "full" },
+  { kind: "img", file: "stack_chat", a: b(10), e: b(12), mode: "full" },
+  // 4: Treppe, schneller, durchgehend rein
+  { kind: "clip", file: "n4", src: 0, a: b(12), e: b(16), rate: 2.45 / (4 * BEAT), zoom: [K0(b(12), 1.0), K0(b(16), 1.18)] },
+  // 5: 550 GSM, Schnee-Clip bei "das heißt", Bild Winterjacke auf "Winterjacke"
+  { kind: "clip", file: "n5", src: 0, a: b(16), e: b(20), zoom: [K0(b(16), 1.0), K0(11.376 - J, 1.0), KF(11.376, 930, 760, 640, 820, 1.45), KF(b(20), 930, 760, 640, 820, 1.5)] },
+  { kind: "clip", file: "schnee", src: 0.9, a: b(20), e: b(22), zoom: [K0(b(20), 1.0), K0(b(22), 1.06)] },
+  { kind: "img", file: "winterjacke", a: b(22), e: b(24), mode: "full" },
+  // 6: Verpacken, Longsleeves im Takt, zurück zum Verpacken, Account
+  { kind: "clip", file: "n6", src: N6_IN, a: b(24), e: b(25), zoom: [K0(b(24), 1.0), K0(b(25), 1.05)] },
+  { kind: "img", file: "ls_a", a: b(25), e: b(26), mode: "card", w: 1312, h: 1199 },
+  { kind: "img", file: "ls_b", a: b(26), e: b(27), mode: "card", w: 1122, h: 1402, cy: 787 },
+  { kind: "img", file: "ls_c", a: b(27), e: b(28), mode: "card", w: 850, h: 1536 },
+  { kind: "img", file: "ls_d", a: b(28), e: b(29), mode: "card", w: 1122, h: 1402 },
+  { kind: "clip", file: "n6", src: N6_IN + (b(29) - b(24)), a: b(29), e: CB_TOTAL, zoom: [KF(b(29), 480, 1350, 540, 1000, 1.25), KF(b(31) - J, 480, 1350, 540, 1000, 1.28), K0(b(31), 1.0), K0(CB_TOTAL, 1.05)] },
 ];
+const N6_END = 6.83; // letzter Frame von Clip 6, danach Standbild
+
 const cam = (keys: K[], t: number) => {
   if (t <= keys[0].t) return keys[0];
   for (let i = 1; i < keys.length; i++) {
@@ -70,23 +78,21 @@ const CAPS: [number, number, string][] = [
   [2.44, 3.6, "AUSEINANDERGENOMMEN"],
   [3.62, 4.28, "HOCHWERTIGER"],
   [4.28, 5.3, "PUFF-PRINT"],
-  [5.38, 6.28, "GLITZERSTEINE"],
-  [6.28, 7.08, "DIE NICHT ABGEHEN"],
-  [7.08, 7.6, "PERFEKTER STACK"],
-  [7.6, 8.46, "AUF DIE SCHUHE"],
-  [10.87, 11.91, "550 GSM"],
-  [11.91, 12.23, "DAS HEISST"],
-  [12.23, 12.83, "IHR BRAUCHT KEINE"],
-  [12.83, 13.74, "WINTERJACKE"],
-  [13.76, 14.3, "WIR SIND UM"],
-  [14.3, 15.68, "18:30 UHR LIVE"],
-  [15.68, 16.3, "WIR VERPACKEN"],
-  [16.3, 17.1, "SPECIAL WINTER"],
-  [17.1, 17.6, "LONGSLEEVES"],
-  [17.6, 18.32, "IN EURER ORDER"],
-  [18.32, 18.95, "REIN"],
-  [19.02, 19.52, "DER ACCOUNT IST"],
-  [19.52, 20.5, "UNTEN VERLINKT"],
+  [5.384, 6.284, "GLITZERSTEINE"],
+  [6.284, 7.084, "DIE NICHT ABGEHEN"],
+  [7.084, 7.604, "PERFEKTER STACK"],
+  [7.604, 8.4, "AUF DIE SCHUHE"],
+  [11.376, 12.416, "550 GSM"],
+  [12.416, 12.736, "DAS HEISST"],
+  [12.736, 13.336, "IHR BRAUCHT KEINE"],
+  [13.336, 14.15, "WINTERJACKE"],
+  [14.244, 14.864, "WIR VERPACKEN"],
+  [14.864, 15.664, "SPECIAL WINTER"],
+  [15.664, 16.164, "LONGSLEEVES"],
+  [16.164, 16.884, "IN EURER ORDER"],
+  [16.884, 17.45, "REIN"],
+  [17.584, 18.084, "DER ACCOUNT IST"],
+  [18.084, 19.0, "UNTEN VERLINKT"],
 ];
 const Captions: React.FC<{ t: number }> = ({ t }) => {
   const c = CAPS.find(([a, e]) => t >= a && t < e);
@@ -96,153 +102,46 @@ const Captions: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
-// ---------- Animationen ----------
-const Pill: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
-  <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.96)", color: "#111", borderRadius: 30, padding: "12px 22px", fontFamily: "'Inter'", fontWeight: 700, fontSize: 26, letterSpacing: "0.06em", boxShadow: "0 10px 30px rgba(0,0,0,0.3)", whiteSpace: "nowrap", ...style }}>{children}</div>
-);
-
-// 1: Bestellungen stapeln sich
-const Orders: React.FC<{ t: number }> = ({ t }) => {
-  const starts = [0.95, 1.3, 1.65, 2.0];
-  const out = ease(t, DROP - 0.12, 0.2, Easing.in(Easing.cubic));
-  if (t < starts[0] || t > DROP + 0.1) return null;
+// Bild: Vollbild (9:16) oder höchstens 90 % Breite (nie größer als das Original) auf Espresso; nur ein langsames Hineinfahren.
+// Helle Karten enden über den Untertiteln (cy), damit weiße Schrift lesbar bleibt.
+const Still: React.FC<{ s: Extract<Shot, { kind: "img" }>; t: number }> = ({ s, t }) => {
+  const p = (t - s.a) / (s.e - s.a);
+  const push = 1 + 0.035 * p;
+  if (s.mode === "full") {
+    return <Img src={staticFile(`cut/img/${s.file}.jpg`)} style={{ position: "absolute", inset: 0, width: 1080, height: 1920, transform: `scale(${push})` }} />;
+  }
+  const w = Math.min(972, s.w ?? 972);
+  const h = (w * (s.h ?? 1)) / (s.w ?? 1);
   return (
-    <div style={{ position: "absolute", left: 50, right: 130, top: 250 }}>
-      {starts.map((s, i) => {
-        const p = ease(t, s, 0.35);
-        if (p <= 0) return null;
-        return (
-          <div key={i} style={{ position: "absolute", left: 0, right: 0, top: (starts.length - 1 - i) * 18 + (1 - p) * -60, opacity: p * (1 - out), transform: `scale(${1 - (starts.filter((x) => x <= t).length - 1 - i) * 0.04}) translateY(${-out * 300}px)`, zIndex: i }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16, background: "rgba(246,246,246,0.96)", borderRadius: 28, padding: "16px 20px", boxShadow: "0 12px 30px rgba(0,0,0,0.28)" }}>
-              <div style={{ width: 60, height: 60, borderRadius: 14, background: "#1E1712", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img src={staticFile("brand/salite-s-light.svg")} style={{ height: 38 }} />
-              </div>
-              <div style={{ flex: 1, fontFamily: "'Inter'" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 24, color: "#111" }}>
-                  SALITE <span style={{ fontWeight: 600, fontSize: 20, color: "#8A8A8E" }}>jetzt</span>
-                </div>
-                <div style={{ fontWeight: 600, fontSize: 23, color: "#222", marginTop: 2 }}>Neue Bestellung</div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <AbsoluteFill style={{ background: "#1E1712" }}>
+      <Img src={staticFile(`cut/img/${s.file}.jpg`)} style={{ position: "absolute", left: (1080 - w) / 2, top: (s.cy ?? 930) - h / 2, width: w, height: h, borderRadius: 10, boxShadow: "0 22px 56px rgba(0,0,0,0.35)", transform: `scale(${push})` }} />
+    </AbsoluteFill>
   );
 };
 
-// Hinweis-Label mit feiner Linie
-const Callout: React.FC<{ t: number; a: number; e: number; x: number; y: number; lx: number; ly: number; text: string }> = ({ t, a, e, x, y, lx, ly, text }) => {
-  const p = ease(t, a, 0.3);
-  const o = 1 - ease(t, e - 0.2, 0.2);
-  if (p <= 0 || o <= 0) return null;
-  const len = Math.hypot(lx - x, ly - y);
-  return (
-    <>
-      <svg width={1080} height={1920} style={{ position: "absolute", inset: 0, opacity: o }}>
-        <circle cx={x} cy={y} r={10 + 4 * p} fill="none" stroke="#FFFFFF" strokeWidth={3} opacity={p} />
-        <line x1={x} y1={y} x2={lx} y2={ly} stroke="#FFFFFF" strokeWidth={3} strokeDasharray={len} strokeDashoffset={len * (1 - p)} style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.5))" }} />
-      </svg>
-      <div style={{ position: "absolute", left: lx, top: ly, transform: `translate(-50%, -50%) scale(${0.9 + 0.1 * p})`, opacity: p * o }}>
-        <Pill>{text}</Pill>
-      </div>
-    </>
-  );
-};
-
-// 3: Glitzer um die Steine
-const Sparkles: React.FC<{ t: number; a: number; e: number; cx: number; cy: number }> = ({ t, a, e, cx, cy }) => {
-  if (t < a || t > e) return null;
-  const pts = [
-    [-150, -40, 0.0], [120, -110, 0.12], [170, 60, 0.25], [-90, 120, 0.35], [40, -170, 0.5], [-190, -150, 0.62], [200, -20, 0.75], [-40, 170, 0.9], [110, 150, 1.05], [-170, 40, 1.2],
-  ];
-  return (
-    <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
-      {pts.map(([dx, dy, d], i) => {
-        const k = ((t - a - d) % 0.7) / 0.7;
-        if (t - a < d) return null;
-        const s = Math.sin(k * Math.PI);
-        return (
-          <g key={i} transform={`translate(${cx + dx} ${cy + dy}) scale(${0.4 + s}) rotate(${k * 90})`} opacity={s}>
-            <path d="M0 -18 L4 -4 L18 0 L4 4 L0 18 L-4 4 L-18 0 L-4 -4 Z" fill="#FFFFFF" />
-            <circle r={4} fill="#FFFFFF" />
-          </g>
-        );
-      })}
-    </svg>
-  );
-};
-
-// 5: Schnee
-const Snow: React.FC<{ t: number; a: number; e: number }> = ({ t, a, e }) => {
-  const o = ease(t, a, 0.3) * (1 - ease(t, e - 0.3, 0.3));
-  if (o <= 0) return null;
-  return (
-    <svg width={1080} height={1920} style={{ position: "absolute", inset: 0, opacity: o }}>
-      {Array.from({ length: 46 }, (_, i) => {
-        const sp = 260 + (i % 7) * 40;
-        const x = ((i * 137) % 1080) + Math.sin((t - a) * 1.5 + i) * 30;
-        const y = (((i * 263) % 1920) + (t - a) * sp) % 1920;
-        const r = 3 + (i % 4) * 2;
-        return <circle key={i} cx={x} cy={y} r={r} fill="#FFFFFF" opacity={0.55 + (i % 3) * 0.15} />;
-      })}
-    </svg>
-  );
-};
-
-// 6: LIVE-Plakette
-const Live: React.FC<{ t: number; a: number; e: number }> = ({ t, a, e }) => {
-  const p = ease(t, a, 0.3, Easing.out(Easing.back(1.4)));
-  const o = 1 - ease(t, e - 0.2, 0.2);
-  if (p <= 0 || o <= 0) return null;
-  const dot = 0.5 + 0.5 * Math.abs(Math.sin((t - a) * 4));
-  return (
-    <div style={{ position: "absolute", top: 250, left: 0, right: 80, display: "flex", justifyContent: "center", opacity: o, transform: `scale(${p})` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 14, background: "rgba(10,10,10,0.6)", borderRadius: 16, padding: "10px 18px 10px 12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#FE2C55", borderRadius: 10, padding: "8px 14px" }}>
-          <div style={{ width: 12, height: 12, borderRadius: 6, background: "#FFFFFF", opacity: dot }} />
-          <span style={{ fontFamily: "'Inter'", fontWeight: 800, fontSize: 26, letterSpacing: "0.1em", color: "#FFFFFF" }}>LIVE</span>
-        </div>
-        <span style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 32, color: "#FFFFFF" }}>18:30 Uhr</span>
-      </div>
-    </div>
-  );
-};
-
-const ArrowDown: React.FC<{ t: number; a: number }> = ({ t, a }) => {
+// TikTok-Account (Live-Profil): Profilbild mit Live-Ring, LIVE-Marke, Handle
+const Account: React.FC<{ t: number; a: number }> = ({ t, a }) => {
   const p = ease(t, a, 0.3);
   if (p <= 0) return null;
+  const k = ((t - a) % 1.2) / 1.2;
   return (
-    <svg width={1080} height={1920} style={{ position: "absolute", inset: 0, opacity: p }}>
-      {[0, 1, 2].map((i) => {
-        const k = (((t - a) * 1.6 - i * 0.22) % 1 + 1) % 1;
-        const o = Math.sin(k * Math.PI);
-        return <path key={i} d={`M${470} ${1510 + i * 26} L540 ${1550 + i * 26} L610 ${1510 + i * 26}`} stroke="#FFFFFF" strokeWidth={6} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity={o} style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" }} />;
-      })}
-    </svg>
-  );
-};
-
-// 3: Detailkarte Schuhe (OBJEKT): Ausschnitt aus Clip 3, groß, Hintergrund kurz dunkler
-const SHOE = { a: 7.42, e: 8.47, sx: 280, sy: 1380, sw: 660, sh: 540, w: 880 };
-const ShoeCard: React.FC<{ t: number }> = ({ t }) => {
-  const p = ease(t, SHOE.a, 0.28);
-  if (t < SHOE.a - 0.02 || t >= SHOE.e) return null;
-  const k = SHOE.w / SHOE.sw;
-  const h = SHOE.sh * k;
-  const seg = SEGS[2];
-  return (
-    <>
-      <AbsoluteFill style={{ background: "rgba(0,0,0,0.45)", opacity: p }} />
-      <div style={{ position: "absolute", left: (1080 - SHOE.w) / 2, top: 820 - h / 2, width: SHOE.w, height: h, borderRadius: 26, overflow: "hidden", boxShadow: "0 24px 60px rgba(0,0,0,0.55)", border: "4px solid #FFFFFF", transform: `translateY(${(1 - p) * 700}px) rotate(${-3 * p + (1 - p) * -10}deg) scale(${1 + 0.03 * ease(t, SHOE.a + 0.3, 0.8, IO)})` }}>
-        <Sequence from={f(seg.out)} durationInFrames={f(seg.dur)}>
-          <OffthreadVideo src={staticFile("cut/n3.mp4")} trimBefore={Math.round(seg.src * 60)} muted style={{ position: "absolute", left: -SHOE.sx * k, top: -SHOE.sy * k, width: 1080 * k, height: 1920 * k }} />
-        </Sequence>
+    <div style={{ position: "absolute", left: 0, right: 80, top: 1150, display: "flex", justifyContent: "center", opacity: p, transform: `translateY(${(1 - p) * 30}px) scale(${0.94 + 0.06 * p})` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 26, background: "rgba(16,16,16,0.72)", borderRadius: 34, padding: "20px 36px 20px 22px" }}>
+        <div style={{ position: "relative", width: 124, height: 124 }}>
+          <div style={{ position: "absolute", inset: -6 - 10 * k, borderRadius: "50%", border: "3px solid #FE2C55", opacity: (1 - k) * 0.7 }} />
+          <div style={{ position: "absolute", inset: 0, borderRadius: "50%", padding: 5, background: "linear-gradient(135deg, #FE2C55, #FF5E8A)" }}>
+            <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "#1E1712", border: "4px solid #101010", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <img src={staticFile("brand/salite-s-light.svg")} style={{ height: 62 }} />
+            </div>
+          </div>
+          <div style={{ position: "absolute", left: "50%", bottom: -12, transform: "translateX(-50%)", background: "#FE2C55", borderRadius: 6, padding: "3px 10px", fontFamily: "'Inter'", fontWeight: 800, fontSize: 19, letterSpacing: "0.04em", color: "#FFFFFF", border: "2px solid #101010" }}>LIVE</div>
+        </div>
+        <div style={{ fontFamily: "'Inter'", color: "#FFFFFF" }}>
+          <div style={{ fontWeight: 700, fontSize: 44 }}>@sj_salite</div>
+          <div style={{ fontWeight: 500, fontSize: 26, color: "rgba(255,255,255,0.7)", marginTop: 4 }}>TikTok</div>
+        </div>
       </div>
-      <div style={{ position: "absolute", left: (1080 - SHOE.w) / 2 + 30, top: 820 - h / 2 - 26, opacity: p, transform: "rotate(-3deg)" }}>
-        <Pill>STACK</Pill>
-      </div>
-    </>
+    </div>
   );
 };
 
@@ -250,55 +149,49 @@ export const CutBeat: React.FC = () => {
   loadFonts();
   const fr = useCurrentFrame();
   const t = fr / CB.fps;
-  const segIdx = SEGS.reduce((acc, s, i) => (t >= s.out ? i : acc), 0);
-  const c = cam(ZOOM[Math.min(segIdx, ZOOM.length - 1)], t);
-  // Takt-Puls auf jedem Takt nach dem Drop
-  let pulse = 0;
-  for (let k = 0; k <= 40; k += 4) {
-    const d = t - b(k);
-    if (d >= 0 && d < 0.18) pulse = Math.max(pulse, (1 - d / 0.18) * 0.018);
-  }
-  // Drop: Blitz und Wackeln, Einstieg mit Unschärfe
+  const cur = SHOTS.reduce((acc, s, i) => (t >= s.a ? i : acc), 0);
+  const shot = SHOTS[cur];
+  // Drop: kurzer Stoß und leichtes Wackeln, Einstieg aus der Unschärfe, Treppe mit Bewegungsunschärfe
   const dropD = t - DROP;
-  const shake = dropD >= 0 && dropD < 0.3 ? (1 - dropD / 0.3) * 14 : t > 2.9 && t < DROP ? ((t - 2.9) / (DROP - 2.9)) * 3 : 0;
-  const sx = Math.sin(t * 95) * shake;
-  const sy = Math.cos(t * 83) * shake;
-  const flash = dropD >= 0 ? interpolate(dropD, [0, 0.02, 0.16], [0, 0.55, 0], clamp) : 0;
-  const introBlur = interpolate(t, [0, 0.25], [10, 0], clamp);
-  // Treppe: Bewegungsunschärfe am Anfang und Ende
-  const s4 = SEGS[3];
-  const stairBlur = t >= s4.out && t < s4.out + s4.dur ? 6 * Math.max(1 - (t - s4.out) / 0.2, (t - (s4.out + s4.dur - 0.2)) / 0.2, 0) : 0;
-  const s = c.s * (1 + pulse);
-  const fit = (v: number, size: number) => Math.min(0, Math.max(size - size * s, v));
-  const x = fit(c.tx - c.fx * s + sx, 1080);
-  const y = fit(c.ty - c.fy * s + sy, 1920);
+  const shake = dropD >= 0 && dropD < 0.25 ? (1 - dropD / 0.25) * 10 : t > 3.0 && t < DROP ? ((t - 3.0) / (DROP - 3.0)) * 2.5 : 0;
+  const stairs = SHOTS[6];
+  const stairBlur = t >= stairs.a && t < stairs.e ? 6 * Math.max(1 - (t - stairs.a) / 0.2, (t - (stairs.e - 0.2)) / 0.2, 0) : 0;
+  const blur = interpolate(t, [0, 0.25], [10, 0], clamp) + stairBlur;
+  let camStyle: React.CSSProperties = {};
+  if (shot.kind === "clip") {
+    const c = cam(shot.zoom, t);
+    const s = c.s;
+    const fit = (v: number, size: number) => Math.min(0, Math.max(size - size * s, v));
+    const x = fit(c.tx - c.fx * s + Math.sin(t * 95) * shake, 1080);
+    const y = fit(c.ty - c.fy * s + Math.cos(t * 83) * shake, 1920);
+    camStyle = { transform: `translate(${x}px, ${y}px) scale(${s})`, filter: blur > 0.05 ? `blur(${blur}px)` : undefined };
+  }
   return (
     <AbsoluteFill style={{ background: "#000", overflow: "hidden" }}>
-      <div style={{ position: "absolute", left: 0, top: 0, width: 1080, height: 1920, transformOrigin: "0 0", transform: `translate(${x}px, ${y}px) scale(${s})`, filter: `blur(${introBlur + stairBlur}px)` }}>
-        {SEGS.map((sg, i) => (
-          <Sequence key={i} from={f(sg.out)} durationInFrames={Math.max(1, f(sg.out + sg.dur) - f(sg.out))}>
-            <OffthreadVideo src={staticFile(`cut/n${sg.clip}.mp4`)} trimBefore={Math.round(sg.src * 60)} playbackRate={sg.rate} muted style={{ width: 1080, height: 1920 }} />
-          </Sequence>
-        ))}
-        <Sequence from={f(b(23) + 6.85)} durationInFrames={Math.max(1, f(END_FREEZE))}>
-          <Freeze frame={0}>
-            <OffthreadVideo src={staticFile("cut/n6.mp4")} trimBefore={Math.round(6.82 * 60)} muted style={{ width: 1080, height: 1920 }} />
-          </Freeze>
-        </Sequence>
+      <div style={{ position: "absolute", left: 0, top: 0, width: 1080, height: 1920, transformOrigin: "0 0", ...camStyle }}>
+        {SHOTS.map((s, i) => {
+          if (s.kind !== "clip") return null;
+          const last = s.file === "n6" && i === SHOTS.length - 1;
+          const playEnd = last ? Math.min(s.e, s.a + (N6_END - s.src)) : s.e;
+          return (
+            <React.Fragment key={i}>
+              <Sequence from={f(s.a)} durationInFrames={Math.max(1, f(playEnd) - f(s.a))}>
+                <OffthreadVideo src={staticFile(`cut/${s.file}.mp4`)} trimBefore={Math.round(s.src * 60)} playbackRate={s.rate ?? 1} muted style={{ width: 1080, height: 1920 }} />
+              </Sequence>
+              {last && playEnd < s.e ? (
+                <Sequence from={f(playEnd)} durationInFrames={Math.max(1, f(s.e) - f(playEnd))}>
+                  <Freeze frame={0}>
+                    <OffthreadVideo src={staticFile("cut/n6.mp4")} trimBefore={Math.round(N6_END * 60)} muted style={{ width: 1080, height: 1920 }} />
+                  </Freeze>
+                </Sequence>
+              ) : null}
+            </React.Fragment>
+          );
+        })}
       </div>
-      <AbsoluteFill style={{ background: "#FFFFFF", opacity: flash }} />
-
-      <Orders t={t} />
-      <Callout t={t} a={4.34} e={5.36} x={600} y={730} lx={300} ly={560} text="PUFF-PRINT" />
-      <Sparkles t={t} a={5.5} e={7.05} cx={560} cy={820} />
-      <ShoeCard t={t} />
-      <Callout t={t} a={10.98} e={12.4} x={850} y={830} lx={470} ly={640} text="550 GSM" />
-      <Snow t={t} a={12.45} e={13.76} />
-      <Live t={t} a={14.3} e={19.0} />
-      <Callout t={t} a={16.3} e={18.95} x={540} y={1150} lx={430} ly={820} text="SPECIAL WINTER LONGSLEEVE" />
-      <ArrowDown t={t} a={19.1} />
+      {shot.kind === "img" ? <Still s={shot} t={t} /> : null}
+      <Account t={t} a={b(32)} />
       <Captions t={t} />
-
     </AbsoluteFill>
   );
 };
