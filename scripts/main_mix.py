@@ -1,9 +1,10 @@
 """Tonmischung für das Main-TikTok (src/bf/MainTikTok.tsx): Stimme + Beat + Effekte.
 
-python scripts/main_mix.py <main_dir> <sfx_dir> <out.wav>
+python scripts/main_mix.py <main_dir> <sfx_dir> <out.wav> [beat_lufs|none]
 - Stimme aus dem Original säubern, auf -14 LUFS, Pausen wie im Bild herausschneiden (kurze Blenden)
 - Beat (wie Beat-Schnitt): Drop auf "69 €", danach im Takt verlängert (Schleifen an Taktgrenzen),
-  unter der Stimme abgesenkt, dezent
+  unter der Stimme abgesenkt. Pegel als 4. Argument (z. B. -36 = sehr leise), "none" = ohne Musik
+  (für einen Song, der in der TikTok-App dazukommt)
 - Effekte einzeln auf ein gemessenes Ziel relativ zur Stimme gepegelt
 - Gesamt auf -14 LUFS mit Limiter
 """
@@ -16,6 +17,7 @@ import soundfile as sf
 from scipy.signal import lfilter
 
 main_dir, sfx_dir, out_p = sys.argv[1:4]
+BEAT_LUFS = sys.argv[4] if len(sys.argv) > 4 else "-36"
 SR = 48000
 EDL = [(0, 9.16), (9.42, 29.95), (30.29, 40.08)]
 STARTS = [0.0]
@@ -119,14 +121,14 @@ k = int(0.15 * SR)
 duck_db = np.convolve(duck_db, np.ones(k) / k, "same")
 bt *= (fade * 10 ** (-duck_db / 20))[:, None]
 lb = lufs_arr(beat[int(DROP_B * SR) : int(loop_end * SR)], "b")
-bt *= 10 ** ((-26 - lb) / 20)  # dezent: 12 LU unter der Stimme, unter Sprache zusätzlich bis 6 dB tiefer
+bt *= 0.0 if BEAT_LUFS == "none" else 10 ** ((float(BEAT_LUFS) - lb) / 20)  # Kunde: Beat viel leiser
 
 # 3) Effekte (Quellzeit, Datei, Ziel dB relativ zur Stimme)
-CARDS = [4.15, 5.25, 9.5, 10.65, 12.0, 14.25, 27.6, 33.3]
+CARDS = [5.25, 9.5, 10.65, 12.0, 14.25, 27.6, 33.3]  # Instagram-Karte bei 3.04 ohne Klick
 COMMENT = "Ich brauche ein Passwort"
 TA, TE = 31.42, 32.55
 SND = f"{main_dir}/snd"
-SFX = [(3.25 - 0.55 / 1, f"{sfx_dir}/riser_short.wav", -20), (3.25, f"{SND}/drop.wav", -12)]
+SFX = []  # kein Riser und kein Schlag bei "69 €" (Kunde: hackt)
 SFX += [(a, f"{SND}/mouse.wav", -16) for a in CARDS]
 SFX += [
     (7.5, f"{sfx_dir}/hit_low.wav", -18),

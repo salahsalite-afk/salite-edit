@@ -52,6 +52,7 @@ mkdir -p public_main
 ln -sfn ../public/fonts public_main/fonts
 ln -sfn ../public/sfx public_main/sfx
 ln -sfn ../public/brand public_main/brand
+ln -sfn ../public/bf public_main/bf
 ln -sfn $M public_main/main
 grep -q public_main .gitignore || echo "public_main/" >> .gitignore
 echo "Main bereit"

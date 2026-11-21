@@ -98,7 +98,7 @@ const Captions: React.FC<{ s: number; hidden: boolean }> = ({ s, hidden }) => {
 };
 
 // ---------- Klick-Karten: Mauszeiger klickt, Bild oder Clip springt auf, Hintergrund unscharf ----------
-type Card = { a: number; e: number; w: number; h: number; cy: number; node: (s: number, t: number) => React.ReactNode; dark?: boolean };
+type Card = { a: number; e: number; w: number; h: number; cy: number; node: (s: number, t: number) => React.ReactNode; dark?: boolean; smooth?: boolean };
 const imgNode = (file: string) => () => <Img src={staticFile(`main/img/${file}`)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />;
 const vidNode = (file: string, a: number, trim: number, rate = 1) => () => (
   <Sequence from={f(o(a))} layout="none">
@@ -125,8 +125,35 @@ const lineupNode = () => {
   return <Img src={staticFile("main/img/poster.jpg")} style={{ position: "absolute", left: 0, top: -LINEUP.y0 * k, width: 1440 * k, height: 1800 * k, maxWidth: "none" }} />;
 };
 
+// Instagram-Beitrag (Poster, 1/7): gleitet ruhig rein, ohne Mausklick
+const IG_W = 740;
+const IG_IMG = IG_W * 1.25;
+const igNode = () => (
+  <div style={{ position: "absolute", inset: 0, background: "#FFFFFF" }}>
+    <div style={{ height: 96, display: "flex", alignItems: "center", gap: 18, padding: "0 22px" }}>
+      <div style={{ width: 60, height: 60, borderRadius: 30, overflow: "hidden", border: "1px solid #DBDBDB" }}>
+        <Img src={staticFile("bf/profilbild.jpg")} style={{ width: "124%", marginLeft: "-12%", marginTop: "-12%" }} />
+      </div>
+      <div style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 27, color: "#000" }}>saliteclothing</div>
+      <div style={{ marginLeft: "auto", fontFamily: "'Inter'", fontWeight: 700, fontSize: 30, color: "#000", letterSpacing: 2 }}>···</div>
+    </div>
+    <Img src={staticFile("main/img/poster.jpg")} style={{ display: "block", width: IG_W, height: IG_IMG }} />
+    <div style={{ position: "relative", height: 100, display: "flex", alignItems: "center", padding: "0 24px", gap: 26 }}>
+      <svg width={40} height={40} viewBox="0 0 24 24"><path d="M12 21 C5 15.5 2 12.5 2 8.5 A4.8 4.8 0 0 1 12 6 A4.8 4.8 0 0 1 22 8.5 C22 12.5 19 15.5 12 21 Z" fill="none" stroke="#000" strokeWidth={1.9} strokeLinejoin="round" /></svg>
+      <svg width={40} height={40} viewBox="0 0 24 24"><path d="M20.5 12 A8.5 8.5 0 1 1 17 5.2 L21 3.5 L19.6 7.6 A8.4 8.4 0 0 1 20.5 12 Z" fill="none" stroke="#000" strokeWidth={1.9} strokeLinejoin="round" /></svg>
+      <svg width={40} height={40} viewBox="0 0 24 24"><path d="M22 3 L9.5 13.5 M22 3 L15 21 L11.5 13 L2.5 9.5 Z" fill="none" stroke="#000" strokeWidth={1.9} strokeLinejoin="round" /></svg>
+      <div style={{ position: "absolute", left: 0, right: 0, display: "flex", justifyContent: "center", gap: 7 }}>
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} style={{ width: 9, height: 9, borderRadius: 5, background: i === 0 ? "#0095F6" : "#C7C7C7" }} />
+        ))}
+      </div>
+      <svg width={40} height={40} viewBox="0 0 24 24" style={{ marginLeft: "auto" }}><path d="M5 2.5 H19 V21.5 L12 15.5 L5 21.5 Z" fill="none" stroke="#000" strokeWidth={1.9} strokeLinejoin="round" /></svg>
+    </div>
+  </div>
+);
+
 const CARDS: Card[] = [
-  { a: 4.15, e: 5.22, w: 810, h: 1012, cy: 860, node: imgNode("poster.jpg") },
+  { a: 3.04, e: 5.22, w: IG_W, h: 96 + IG_IMG + 100, cy: 820, node: igNode, smooth: true },
   { a: 5.25, e: 6.48, w: 760, h: 1351, cy: 900, node: vidNode("schnee.mp4", 5.25, 0.9), dark: true },
   { a: 9.5, e: 10.62, w: 860, h: 860, cy: 860, node: vidNode("puff.mp4", 9.5, 0.3), dark: true },
   { a: 10.65, e: 11.97, w: 800, h: 1200, cy: 860, node: imgNode("glitzer.jpg") },
@@ -136,22 +163,30 @@ const CARDS: Card[] = [
   { a: 33.3, e: 34.22, w: 972, h: (LINEUP.y1 - LINEUP.y0) * (972 / 1440), cy: 820, node: lineupNode },
 ];
 const cardState = (c: Card, s: number) => {
-  const inP = ease(s, c.a, 0.24);
-  const outP = interpolate(s, [c.e - 0.1, c.e], [0, 1], clamp);
+  const inP = ease(s, c.a, c.smooth ? 0.45 : 0.24);
+  const outP = interpolate(s, [c.e - (c.smooth ? 0.18 : 0.1), c.e], [0, 1], clamp);
   return { inP, outP, on: s >= c.a && s < c.e };
 };
+// Im Original steht das Bild von 3,25 bis 6,5 s still (Kunde: "als wär da Lag"). Darunter läuft deshalb
+// dieselbe Szene davor (1,62 bis 3,25 s) in halber Geschwindigkeit, unscharf hinter den Karten.
+const FILL = { a: 3.233, e: 6.5, src: 1.62, rate: 0.5 };
+// durchgehend unscharf, wo Karten direkt aufeinander folgen (kein kurzes Aufblitzen dazwischen)
+const BLUR_HOLD: [number, number][] = [
+  [3.04, 6.48],
+  [9.5, 13.36],
+];
 const blurAt = (s: number) =>
-  CARDS.reduce((m, c) => {
-    const b = interpolate(s, [c.a - 0.02, c.a + 0.18, c.e - 0.12, c.e + 0.02], [0, 1, 1, 0], clamp);
+  [...CARDS.map((c) => [c.a, c.e] as [number, number]), ...BLUR_HOLD].reduce((m, [a, e]) => {
+    const b = interpolate(s, [a - 0.02, a + 0.18, e - 0.12, e + 0.02], [0, 1, 1, 0], clamp);
     return Math.max(m, b);
   }, 0);
-
 const CardView: React.FC<{ c: Card; s: number; t: number }> = ({ c, s, t }) => {
   const { inP, outP, on } = cardState(c, s);
   if (!on) return null;
-  const sc = 0.72 + 0.28 * inP - 0.04 * outP;
+  const sc = c.smooth ? 1 : 0.72 + 0.28 * inP - 0.04 * outP;
+  const dy = c.smooth ? (1 - inP) * 140 + outP * 60 : 0;
   return (
-    <div style={{ position: "absolute", left: 540 - c.w / 2, top: c.cy - c.h / 2, width: c.w, height: c.h, borderRadius: 26, overflow: "hidden", background: c.dark ? "#111" : "#FFF", boxShadow: "0 30px 80px rgba(0,0,0,0.45)", opacity: Math.min(1, inP * 3) * (1 - outP), transform: `scale(${sc})` }}>
+    <div style={{ position: "absolute", left: 540 - c.w / 2, top: c.cy - c.h / 2, width: c.w, height: c.h, borderRadius: 26, overflow: "hidden", background: c.dark ? "#111" : "#FFF", boxShadow: "0 30px 80px rgba(0,0,0,0.45)", opacity: Math.min(1, inP * (c.smooth ? 1.6 : 3)) * (1 - outP), transform: `translateY(${dy}px) scale(${sc})` }}>
       {c.node(s, t)}
     </div>
   );
@@ -159,7 +194,7 @@ const CardView: React.FC<{ c: Card; s: number; t: number }> = ({ c, s, t }) => {
 
 // Mauszeiger (Pfeil), fährt rein, klickt, Kreis breitet sich aus
 const Cursor: React.FC<{ s: number }> = ({ s }) => {
-  const c = CARDS.find((x) => s >= x.a - 0.32 && s < x.a + 0.32);
+  const c = CARDS.find((x) => !x.smooth && s >= x.a - 0.32 && s < x.a + 0.32);
   if (!c) return null;
   const tx = 600;
   const ty = c.cy + 60;
@@ -231,7 +266,6 @@ const FGS: FG[] = [
   { name: "rord", f0: 1027, n: 79 },
 ];
 const BEHIND: { a: number; e: number; fg: string }[] = [
-  { a: 3.25, e: 4.15, fg: "r69" },
   { a: 7.45, e: 9.16, fg: "r550" },
   { a: 26.5, e: 27.55, fg: "r10" },
   { a: 34.25, e: 36.85, fg: "rord" },
@@ -247,7 +281,6 @@ const BigText: React.FC<{ text: string; size: number; color: string; top: number
   <div style={{ position: "absolute", left: 0, right: 0, top, textAlign: "center", fontFamily: "'Anton'", fontSize: size, lineHeight: 1, color, opacity: p, transform: `scale(${1.08 - 0.08 * p})`, textShadow: "0 10px 40px rgba(0,0,0,0.45)", whiteSpace: "nowrap" }}>{text}</div>
 );
 const Behind: React.FC<{ s: number }> = ({ s }) => {
-  if (s >= 3.25 && s < 4.15) return <BigText text="69 €" size={470} color="#FFFFFF" top={500} p={ease(s, 3.25, 0.2)} />;
   if (s >= 7.45 && s < 9.16) {
     const n = Math.round(550 * interpolate(s, [7.45, 7.95], [0, 1], { ...clamp, easing: Easing.out(Easing.cubic) }));
     const p = ease(s, 7.45, 0.2);
@@ -440,6 +473,9 @@ export const MainTikTok: React.FC = () => {
               <OffthreadVideo src={staticFile("main/main.mp4")} trimBefore={Math.round(a * 60)} muted style={{ width: 1080, height: 1920 }} />
             </Sequence>
           ))}
+          <Sequence from={f(o(FILL.a))} durationInFrames={f(o(FILL.e)) - f(o(FILL.a))}>
+            <OffthreadVideo src={staticFile("main/main.mp4")} trimBefore={Math.round(FILL.src * 60)} playbackRate={FILL.rate} muted style={{ width: 1080, height: 1920 }} />
+          </Sequence>
           <Behind s={s} />
           <Foreground s={s} />
         </div>
