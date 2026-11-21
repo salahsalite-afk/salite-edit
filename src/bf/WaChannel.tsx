@@ -10,7 +10,7 @@ export const WA = { fps: 30, width: 1080, height: 1920 };
 const CUT = 1.48; // nach "Channel" (Wortende), Stimme hallt im Freeze nach (scripts/wa_voice_track.py)
 const FREEZE = 3.6;
 const CLIP = 3.2;
-const TAIL = 1.2; // Standbild, "Passwort" hallt nach, am Ende weich abblenden
+const TAIL = 0; // Kunde: Ende ohne Standbild, ohne Echo, ohne Blende
 export const WA_FRAMES = Math.round((CLIP + FREEZE + TAIL) * WA.fps);
 const f = (s: number) => Math.round(s * WA.fps);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
@@ -306,7 +306,6 @@ export const WaChannel: React.FC = () => {
   const fzIn = ease(t, FZ, 0.6, Easing.inOut(Easing.cubic)) * (1 - ease(t, FE - 0.35, 0.55, Easing.inOut(Easing.cubic)));
   const fzPunch = 0;
   const fzDrift = t >= FZ && t < FE + 0.5 ? interpolate(t, [FZ, FE], [0, 0.05], clamp) * (1 - ease(t, FE - 0.2, 0.7)) : 0;
-  const endFade = interpolate(t, [T.end - 0.4, T.end], [0, 1], clamp);
   const scale = 1 + 0.14 * hit + drift + fzPunch + fzDrift;
   const blur = 10 * interpolate(t, [0, 0.2], [1, 0], clamp) + 7 * fzIn;
   const bright = 1 - 0.42 * fzIn;
@@ -325,18 +324,19 @@ export const WaChannel: React.FC = () => {
         <Sequence from={f(FE)} durationInFrames={f(CLIP - CUT)}>
           <OffthreadVideo src={staticFile("wa/clip.mp4")} trimBefore={f(CUT)} muted />
         </Sequence>
-        <Sequence from={f(CLIP + FREEZE)} durationInFrames={f(TAIL)}>
-          <Freeze frame={0}>
-            <OffthreadVideo src={staticFile("wa/clip.mp4")} trimBefore={f(CLIP) - 1} muted />
-          </Freeze>
-        </Sequence>
+        {TAIL > 0 && (
+          <Sequence from={f(CLIP + FREEZE)} durationInFrames={f(TAIL)}>
+            <Freeze frame={0}>
+              <OffthreadVideo src={staticFile("wa/clip.mp4")} trimBefore={f(CLIP) - 1} muted />
+            </Freeze>
+          </Sequence>
+        )}
       </AbsoluteFill>
       <div style={{ position: "absolute", left: 0, right: 0, top: 1000, height: 560, background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)" }} />
       <AbsoluteFill style={{ background: "#FFFFFF", opacity: flash }} />
       <TopSteps t={t} />
       <Caption t={t} />
       <FreezeMoment t={t} />
-      <AbsoluteFill style={{ background: "#000", opacity: endFade }} />
 
       <Audio src={staticFile("wa/voice_track.wav")} />
       <Sfx at={0} src="sfx/hit_low.wav" vol={0.35} />

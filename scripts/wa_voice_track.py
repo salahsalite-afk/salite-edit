@@ -2,10 +2,9 @@
 
 python scripts/wa_voice_track.py <voice.wav> <out.wav> <cut> <freeze> <clip> <tail>
 - bis <cut> Originalstimme, kurzes Ausblenden nach "Channel"
-- im Freeze: "Channel" hallt als Echo nach, jede Wiederholung leiser, dumpfer und etwas langsamer (wie eine Erinnerung im Film),
-  dazu ein leiser Raumhall der ganzen Phrase "WhatsApp-Channel"
+- im Freeze: nur ein kurzer, dezenter Nachklang auf "Channel" (etwa 0,8 s), danach Stille
 - nach dem Freeze: Stimme blendet weich wieder ein
-- am Ende: "Passwort" hallt im Standbild nach
+- am Ende: kein Echo, kein Standbild
 """
 import sys
 
@@ -71,21 +70,19 @@ def echo_word(word, start, repeats, gap, gain, slow):
 
 # 1) bis zum Freeze, weich aus
 put(fade(seg(0, CUT), 0, 0.08), 0)
-# 2) Echo im Freeze: "Channel" und leiser Hall der Phrase
+# 2) dezenter Nachklang nur auf "Channel": kurzer Hall plus eine leise Wiederholung, nach etwa 0,8 s Stille
+#    (Kunde: keine verfremdeten, langsamen Stimmen, nichts Unheimliches, professionell und kaum merklich)
 channel = fade(seg(1.10, CUT), 0.02, 0.06)
-echo_word(channel, 1.10, repeats=5, gap=0.55, gain=0.6, slow=0.94)
-phrase = fade(seg(0.84, CUT), 0.03, 0.08)
-put(reverb(lowp(phrase, 2500), 2.4, 1.0) * 0.35, 0.84)
+tail = reverb(channel, 0.8, 1.0)[len(channel) - int(0.02 * SR) :]  # nur der Hall nach dem Wort
+put(fade(tail, 0.02, 0.5) * 0.28, CUT - 0.02)
+rep = lowp(channel, 2800)
+put(fade(rep, 0.02, 0.2) * 0.16, 1.10 + 0.42)  # eine leise Wiederholung direkt nach dem Wort
 # 3) nach dem Freeze weich wieder rein
 FE = CUT + FREEZE
 put(fade(seg(CUT, CLIP), 0.18, 0.05), FE)
-# 4) Ende: "Passwort" hallt nach
-pw_src = (2.58, 2.95)
-pw = fade(seg(*pw_src), 0.02, 0.06)
-echo_word(pw, pw_src[0] + FREEZE, repeats=3, gap=0.5, gain=0.55, slow=0.95)
-
+# 4) Ende: kein Nachhall, das Video endet einfach (nur 30 ms gegen Knacken)
 y = y[: int(total * SR)]
-end_fade = int(0.35 * SR)
+end_fade = int(0.03 * SR)
 y[-end_fade:] *= np.linspace(1, 0, end_fade)
 peak = np.abs(y).max()
 if peak > 0.95:
