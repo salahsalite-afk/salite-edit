@@ -13,6 +13,7 @@ import { FPS as NEWS_FPS, NEWS_FRAMES, SaliteNews } from "./bf/SaliteNews";
 import { BlackWeekHotel, HOTEL, HOTEL_FRAMES } from "./bf/BlackWeekHotel";
 import { GFPS, GTA_FRAMES, GtaBox } from "./bf/GtaBox";
 import { WA, WA_FRAMES, WaChannel } from "./bf/WaChannel";
+import { CB, CB_FRAMES, CutBeat } from "./bf/CutBeat";
 import { BEAMER, SafetyBeamer } from "./card/SafetyBeamer";
 import { BEAMER_CLEAN, SafetyBeamerClean } from "./card/SafetyBeamerClean";
 import { COMIC_CARD, COMIC_SLIDES, SafetyComicCard, SafetyComicSlides } from "./card/SafetyComic";
@@ -80,6 +81,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="GtaBox" component={GtaBox} defaultProps={{}} fps={GFPS} width={1080} height={1920} durationInFrames={GTA_FRAMES} />
     {/* WhatsApp-Kanal-Aufruf mit Passwort speichern */}
     <Composition id="WaChannel" component={WaChannel} defaultProps={{}} fps={WA.fps} width={WA.width} height={WA.height} durationInFrames={WA_FRAMES} />
+    {/* Beat-Schnitt der 6 Clips (Drop, Zooms, Effekte) */}
+    <Composition id="CutBeat" component={CutBeat} defaultProps={{}} fps={CB.fps} width={CB.width} height={CB.height} durationInFrames={CB_FRAMES} />
     {/* Digitales Tracksuit-Mockup (transparent), je Farbe */}
     {(["grey", "black", "bordeaux", "pink"] as const).map((c) => (
       <Composition key={c} id={`Mockup-${c}`} component={Mockup} defaultProps={{ color: c }} fps={30} width={1200} height={1800} durationInFrames={1} />
