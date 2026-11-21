@@ -7,15 +7,15 @@ import { loadFonts } from "../story/LineupPan";
 // (Kanal beitreten -> Glocke an mit Glocken-Icon -> Passwort kommt als Mitteilung).
 // Feste freie Zone für den Instagram-Link-Sticker (y 1280 bis 1480) über das ganze Video: nichts liegt dort.
 export const WA = { fps: 30, width: 1080, height: 1920 };
-const CUT = 1.44; // Sprechpause nach "Channel"
-const FREEZE = 2.6;
+const CUT = 1.48; // nach "Channel" (Wortende), Stimme hallt im Freeze nach (scripts/wa_voice_track.py)
+const FREEZE = 3.6;
 const CLIP = 3.2;
-const TAIL = 0.5;
+const TAIL = 1.2; // Standbild, "Passwort" hallt nach, am Ende weich abblenden
 export const WA_FRAMES = Math.round((CLIP + FREEZE + TAIL) * WA.fps);
 const f = (s: number) => Math.round(s * WA.fps);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const OUT = Easing.out(Easing.exp);
-const BACK = Easing.out(Easing.back(1.6));
+const BACK = Easing.out(Easing.back(1.15));
 const ease = (t: number, a: number, len = 0.18, e = OUT) => interpolate(t, [a, a + len], [0, 1], { ...clamp, easing: e });
 const out = (src: number) => (src < CUT ? src : src + FREEZE);
 const GREEN = "#25D366";
@@ -39,18 +39,19 @@ const WORDS: { w: string; s: number }[] = [
 const FZ = CUT;
 const FE = CUT + FREEZE;
 const r = (x: number) => FZ + x; // Zeit im Freeze
+// ruhiger Ablauf im Freeze (Kunde: nicht hektisch, angenehm zum Zusehen)
 const T = {
-  line: r(0.05),
-  card: r(0.1),
-  join: r(0.55),
-  step1: r(0.85),
-  cardOut: r(0.95),
-  bellRow: r(1.0),
-  bellTap: r(1.35),
-  step2: r(1.6),
-  notif: r(1.7),
-  step3: r(2.05),
-  link: r(0.3),
+  line: r(0.35),
+  card: r(0.45),
+  join: r(1.05),
+  step1: r(1.5),
+  cardOut: r(1.6),
+  bellRow: r(1.7),
+  bellTap: r(2.35),
+  step2: r(2.75),
+  notif: r(2.8),
+  step3: r(3.3),
+  link: r(0.95),
   pass: out(2.62),
   end: CLIP + FREEZE + TAIL,
 };
@@ -92,7 +93,19 @@ const GoldBell: React.FC<{ size: number }> = ({ size }) => (
 );
 
 const Caption: React.FC<{ t: number }> = ({ t }) => {
-  if (t >= FZ - 0.02 && t < FE) return null;
+  if (t >= FZ && t < FE) {
+    const k = interpolate(t, [FZ, FZ + 0.9], [0, 1], clamp);
+    if (k >= 1) return null;
+    return (
+      <div style={{ position: "absolute", left: 60, right: 140, top: CAP_TOP, textAlign: "center" }}>
+        {[0, 1, 2].map((j) => (
+          <div key={j} style={{ position: j === 0 ? "relative" : "absolute", left: 0, right: 0, top: 0, display: j === 0 ? "inline-block" : "block", fontFamily: "'Inter'", fontWeight: 700, fontSize: 78, letterSpacing: "0.02em", color: "#FFFFFF", textShadow: "0 3px 14px rgba(0,0,0,0.45)", opacity: (1 - k) * (j === 0 ? 1 : 0.35 / j), transform: `scale(${1 + k * 0.12 * (j + 1)})`, filter: `blur(${k * 6 * (j + 1)}px)` }}>
+            CHANNEL
+          </div>
+        ))}
+      </div>
+    );
+  }
   let i = -1;
   WORDS.forEach((w, k) => {
     if (t >= w.s) i = k;
@@ -112,7 +125,7 @@ const Caption: React.FC<{ t: number }> = ({ t }) => {
 // Lade-Linie durch die drei Schritte (im Freeze groß, danach klein oben)
 const STEPS = ["KANAL", "GLOCKE", "PASSWORT"];
 const progress = (t: number) =>
-  interpolate(t, [T.join, T.step1, T.bellTap, T.step2, T.notif + 0.1, T.step3], [0, 0.5, 0.5, 1, 1, 2], { ...clamp, easing: Easing.inOut(Easing.cubic) }) / 2;
+  interpolate(t, [T.join, T.step1, T.bellTap, T.step2, T.notif + 0.15, T.step3], [0, 0.5, 0.5, 1, 1, 2], { ...clamp, easing: Easing.inOut(Easing.sin) }) / 2;
 const doneAt = [T.step1, T.step2, T.step3];
 
 const ProgressLine: React.FC<{ t: number; compact: boolean }> = ({ t, compact }) => {
@@ -147,31 +160,31 @@ const ProgressLine: React.FC<{ t: number; compact: boolean }> = ({ t, compact })
 
 // Freeze-Szene
 const FreezeMoment: React.FC<{ t: number }> = ({ t }) => {
-  if (t < FZ || t >= FE + 0.25) return null;
-  const all = 1 - ease(t, FE - 0.1, 0.25);
+  if (t < FZ || t >= FE + 0.15) return null;
+  const all = 1 - ease(t, FE - 0.35, 0.45, Easing.inOut(Easing.cubic));
   // 1) Kanal-Karte
-  const cIn = ease(t, T.card, 0.3, BACK);
-  const cOut = ease(t, T.cardOut, 0.25, Easing.in(Easing.cubic));
+  const cIn = ease(t, T.card, 0.5, BACK);
+  const cOut = ease(t, T.cardOut, 0.4, Easing.inOut(Easing.cubic));
   const joined = t >= T.join;
   const tap = interpolate(t, [T.join - 0.08, T.join, T.join + 0.12], [1, 0.93, 1], clamp);
   // 2) TikTok-Glocke
-  const bIn = ease(t, T.bellRow, 0.25, BACK);
-  const bOut = ease(t, T.notif + 0.1, 0.25);
+  const bIn = ease(t, T.bellRow, 0.45, BACK);
+  const bOut = ease(t, T.notif + 0.25, 0.4);
   const on = t >= T.bellTap;
-  const ring = t >= T.bellRow + 0.1 && t < T.bellTap + 0.4 ? Math.sin((t - T.bellRow) * 40) * 18 * Math.max(0, 1 - Math.max(0, t - T.bellTap) / 0.4) : 0;
+  const ring = t >= T.bellRow + 0.2 && t < T.bellTap + 0.5 ? Math.sin((t - T.bellRow) * 30) * 15 * Math.max(0, 1 - Math.max(0, t - T.bellTap) / 0.5) : 0;
   const bTap = interpolate(t, [T.bellTap - 0.08, T.bellTap, T.bellTap + 0.12], [1, 0.88, 1], clamp);
-  const wave = interpolate(t, [T.bellTap, T.bellTap + 0.45], [0, 1], { ...clamp, easing: OUT });
+  const wave = interpolate(t, [T.bellTap, T.bellTap + 0.6], [0, 1], { ...clamp, easing: OUT });
   // Glocken-Emoji steigt auf
-  const em = ease(t, T.bellTap + 0.02, 0.35, BACK);
-  const emRise = interpolate(t, [T.bellTap, T.notif + 0.3], [0, -150], { ...clamp, easing: OUT });
-  const emFade = 1 - ease(t, T.notif + 0.15, 0.25);
-  const emSwing = Math.sin((t - T.bellTap) * 22) * 14 * Math.max(0, 1 - (t - T.bellTap) / 0.8);
+  const em = ease(t, T.bellTap + 0.05, 0.5, BACK);
+  const emRise = interpolate(t, [T.bellTap, T.notif + 0.5], [0, -150], { ...clamp, easing: OUT });
+  const emFade = 1 - ease(t, T.notif + 0.3, 0.4);
+  const emSwing = Math.sin((t - T.bellTap) * 16) * 12 * Math.max(0, 1 - (t - T.bellTap) / 1.1);
   // 3) Mitteilung von oben
-  const nIn = ease(t, T.notif, 0.35, BACK);
-  const dots = Math.max(0, Math.min(6, Math.floor((t - T.notif - 0.15) / 0.05)));
+  const nIn = ease(t, T.notif, 0.55, BACK);
+  const dots = Math.max(0, Math.min(6, Math.floor((t - T.notif - 0.2) / 0.07)));
   // Lade-Linie und Link-Hinweis
-  const line = ease(t, T.line, 0.3);
-  const link = ease(t, T.link, 0.3);
+  const line = ease(t, T.line, 0.5);
+  const link = ease(t, T.link, 0.5);
   const bob = Math.sin((t - T.link) * 7) * 6;
   const btn: React.CSSProperties = { height: 74, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter'", fontWeight: 700, fontSize: 28 };
   return (
@@ -290,12 +303,14 @@ export const WaChannel: React.FC = () => {
   const t = fr / WA.fps;
   const hit = interpolate(t, [0, 0.35], [1, 0], { ...clamp, easing: OUT });
   const drift = interpolate(t, [0.35, T.end], [0, 0.035], clamp);
-  const fzIn = ease(t, FZ, 0.25) * (1 - ease(t, FE - 0.1, 0.25));
-  const fzPunch = t >= FZ ? interpolate(t, [FZ, FZ + 0.25], [0.05, 0], clamp) : 0;
-  const scale = 1 + 0.14 * hit + drift + fzPunch + 0.02 * fzIn;
+  const fzIn = ease(t, FZ, 0.6, Easing.inOut(Easing.cubic)) * (1 - ease(t, FE - 0.35, 0.55, Easing.inOut(Easing.cubic)));
+  const fzPunch = 0;
+  const fzDrift = t >= FZ && t < FE + 0.5 ? interpolate(t, [FZ, FE], [0, 0.05], clamp) * (1 - ease(t, FE - 0.2, 0.7)) : 0;
+  const endFade = interpolate(t, [T.end - 0.4, T.end], [0, 1], clamp);
+  const scale = 1 + 0.14 * hit + drift + fzPunch + fzDrift;
   const blur = 10 * interpolate(t, [0, 0.2], [1, 0], clamp) + 7 * fzIn;
   const bright = 1 - 0.42 * fzIn;
-  const flash = Math.max(interpolate(t, [0, 0.03, 0.22], [0.6, 0.35, 0], clamp), t >= FZ ? interpolate(t, [FZ, FZ + 0.02, FZ + 0.18], [0, 0.45, 0], clamp) : 0);
+  const flash = interpolate(t, [0, 0.03, 0.22], [0.6, 0.35, 0], clamp);
   return (
     <AbsoluteFill style={{ background: "#000", overflow: "hidden" }}>
       <AbsoluteFill style={{ transform: `scale(${scale})`, filter: `blur(${blur}px) brightness(${bright})` }}>
@@ -321,26 +336,22 @@ export const WaChannel: React.FC = () => {
       <TopSteps t={t} />
       <Caption t={t} />
       <FreezeMoment t={t} />
+      <AbsoluteFill style={{ background: "#000", opacity: endFade }} />
 
-      <Sequence durationInFrames={f(CUT)}>
-        <Audio src={staticFile("wa/voice.wav")} />
-      </Sequence>
-      <Sequence from={f(FE)}>
-        <Audio src={staticFile("wa/voice.wav")} trimBefore={f(CUT)} />
-      </Sequence>
+      <Audio src={staticFile("wa/voice_track.wav")} />
       <Sfx at={0} src="sfx/hit_low.wav" vol={0.35} />
       <Sfx at={0} src="sfx/whoosh_soft.wav" vol={0.25} len={0.8} />
-      <Sfx at={FZ} src="wa/snd/shutter.wav" vol={0.35} len={0.5} />
+      <Sfx at={FZ + 0.05} src="sfx/whoosh_soft.wav" vol={0.12} len={0.8} />
       <Sfx at={T.card} src="wa/snd/pop.wav" vol={0.25} len={0.3} />
       <Sfx at={T.join} src="sfx/click.wav" vol={0.2} len={0.4} />
       <Sfx at={T.step1} src="sfx/tick.wav" vol={0.14} len={0.3} />
-      <Sfx at={T.cardOut} src="sfx/whoosh_soft.wav" vol={0.12} len={0.6} />
-      <Sfx at={T.bellRow + 0.1} src="wa/snd/bell.wav" vol={0.3} len={1.3} />
+      <Sfx at={T.cardOut} src="sfx/whoosh_soft.wav" vol={0.08} len={0.6} />
+      <Sfx at={T.bellRow + 0.2} src="wa/snd/bell.wav" vol={0.22} len={1.3} />
       <Sfx at={T.bellTap} src="sfx/click.wav" vol={0.2} len={0.4} />
       <Sfx at={T.step2} src="sfx/tick.wav" vol={0.14} len={0.3} />
       <Sfx at={T.notif} src="sfx/notify.wav" vol={0.22} len={1} />
       <Sfx at={T.step3} src="wa/snd/pop.wav" vol={0.22} len={0.3} />
-      <Sfx at={FE - 0.12} src="sfx/whoosh_soft.wav" vol={0.16} len={0.6} />
+      <Sfx at={FE - 0.3} src="sfx/whoosh_soft.wav" vol={0.1} len={0.8} />
       <Sfx at={T.pass} src="wa/snd/pop.wav" vol={0.16} len={0.3} />
     </AbsoluteFill>
   );

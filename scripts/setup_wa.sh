@@ -15,6 +15,7 @@ if [ ! -f /dev/shm/wa/voice.wav ]; then
   G=$(python3 -c "print(-14-($I)+1)")
   ffmpeg -v error -y -i /dev/shm/wa/voice_raw.wav -af "$PRE,volume=${G}dB,alimiter=limit=0.84:attack=3:release=60:level=false" -ar 48000 /dev/shm/wa/voice.wav
 fi
+[ -f /dev/shm/wa/voice_track.wav ] || .venv/bin/python scripts/wa_voice_track.py /dev/shm/wa/voice.wav /dev/shm/wa/voice_track.wav 1.48 3.6 3.2 1.2
 [ -f /dev/shm/wa/snd/bell.wav ] || .venv/bin/python scripts/wa_sounds.py /dev/shm/wa/snd
 mkdir -p public_wa
 ln -sfn ../public/fonts public_wa/fonts
