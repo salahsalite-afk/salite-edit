@@ -124,22 +124,16 @@ lb = lufs_arr(beat[int(DROP_B * SR) : int(loop_end * SR)], "b")
 bt *= 0.0 if BEAT_LUFS == "none" else 10 ** ((float(BEAT_LUFS) - lb) / 20)  # Kunde: Beat viel leiser
 
 # 3) Effekte (Quellzeit, Datei, Ziel dB relativ zur Stimme)
-CARDS = [5.25, 9.5, 10.65, 12.0, 14.25, 27.6, 33.3]  # Instagram-Karte bei 3.04 ohne Klick
+CARDS = [5.25, 9.5, 10.65, 12.0, 14.25, 15.0, 16.2, 19.2, 20.15, 21.05, 21.95, 23.3, 27.6, 33.3]  # Instagram-Karte bei 3.04 ohne Klick
 COMMENT = "Ich brauche ein Passwort"
 TA, TE = 31.42, 32.55
 SND = f"{main_dir}/snd"
-SFX = []  # kein Riser und kein Schlag bei "69 €" (Kunde: hackt)
+SFX = [(0.0, f"{SND}/alarm.wav", -18), (0.84, f"{SND}/strike.wav", -20), (1.32, f"{SND}/strike.wav", -20), (1.6, f"{sfx_dir}/hit_low.wav", -16), (5.82, f"{SND}/strike.wav", -20)]  # Hook, Puffer; kein Schlag bei "69 €" (Kunde: hackt)
 SFX += [(a, f"{SND}/mouse.wav", -16) for a in CARDS]
 SFX += [
     (7.5, f"{sfx_dir}/hit_low.wav", -18),
     (26.55, f"{sfx_dir}/hit_low.wav", -18),
-    (14.94, f"{sfx_dir}/tick.wav", -22),
-    (15.84, f"{sfx_dir}/tick.wav", -22),
     (17.06, f"{sfx_dir}/tick.wav", -20),
-    (19.28, f"{sfx_dir}/tick.wav", -22),
-    (20.2, f"{sfx_dir}/tick.wav", -22),
-    (21.1, f"{sfx_dir}/tick.wav", -22),
-    (22.02, f"{sfx_dir}/tick.wav", -22),
     (31.0, f"{sfx_dir}/notify.wav", -18),
     (32.68, f"{sfx_dir}/click.wav", -20),
     (33.8, f"{SND}/stamp.wav", -14),

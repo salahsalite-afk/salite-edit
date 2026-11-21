@@ -49,4 +49,18 @@ t = t_(0.5)
 thump = np.sin(2 * np.pi * (48 + 70 * np.exp(-t * 30)) * t) * np.exp(-t * 14)
 slap = band(rng.normal(0, 1, len(t)), 400, 3200) * np.exp(-t * 38) * 0.6
 save("stamp", np.tanh((thump + slap) * 1.6))
+# Warnton für den Hook: zwei kurze, weiche Töne (kein Sirenen-Kreischen)
+t = t_(0.5)
+a = np.zeros_like(t)
+for at, fq in ((0.0, 988), (0.13, 740)):
+    i = int(at * SR)
+    tt = t[: len(t) - i]
+    env = np.minimum(1, tt / 0.006) * np.exp(-tt * 14)
+    a[i:] += (np.sin(2 * np.pi * fq * tt) + 0.3 * np.sin(2 * np.pi * 2 * fq * tt)) * env
+save("alarm", a)
+
+# Durchstreichen: kurzer Marker-Strich (gefiltertes Rauschen, steigend)
+t = t_(0.18)
+w = band(rng.normal(0, 1, len(t)), 2500, 7000) * np.sin(np.pi * t / 0.18) ** 1.5
+save("strike", w)
 print("ok")

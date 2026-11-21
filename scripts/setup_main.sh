@@ -15,6 +15,11 @@ dl beat.mov 1elDEjdC1zWpRdR16o2Cz5OfJcjseWa35      # Beat (wie Beat-Schnitt)
 dl nummer_2.mov 1mCKCWUN20BF9irAC40XN4FA2yUGqGuyF  # Puff-Print
 dl glitzer.png 1xonTmCl3llHDd0t86zRD3AVPAZ49Cs20
 dl schnee.mov 172ssjLix-KXm7LQ0rKPuPw9fd0MQFZCR
+dl barber.mov 1UJ2ww-3MEjQsCd6V5yBr8IYF-9lh9uh3     # Barberstuhl (V3)
+dl v3959.mov 1P7S6CSUlJCCT_a4RLvVjSg5461hQrEzB      # Wasser auf Nylon
+dl v3965.mov 1XDwF1LoOCgwZdym673NpGr3n_Y0V8V5P      # Hose verstellen
+I=/tmp/claude-0/-home-user-salite-edit/a17b8c1e-3970-57a6-9962-bdd85193fd8a/images
+for i in 11 12 13 14 15; do [ -s $S/d$i.jpg ] || cp $I/$i.jpg $S/d$i.jpg; done
 [ -s $S/poster.png ] || cp $U/d5352b9d-image.png $S/poster.png
 [ -s $S/stack_chat.jpg ] || cp $U/493c62bd-image.jpg $S/stack_chat.jpg
 
@@ -23,6 +28,11 @@ dl schnee.mov 172ssjLix-KXm7LQ0rKPuPw9fd0MQFZCR
 [ -s $M/orders.mp4 ] || ffmpeg -v error -y -i $S/orders.mp4 -c:v libx264 -preset medium -crf 14 -pix_fmt yuv420p -r 60 -an $M/orders.mp4
 [ -s $M/schnee.mp4 ] || ffmpeg -v error -y -i $S/schnee.mov -vf "scale=1080:1920:flags=lanczos" -c:v libx264 -preset medium -crf 14 -pix_fmt yuv420p -r 60 -an $M/schnee.mp4
 [ -s $M/beat.wav ] || ffmpeg -v error -y -i $S/beat.mov -vn -ac 2 -ar 48000 $M/beat.wav
+# V3: kurze Ausschnitte (SDR, Drehung macht ffmpeg), 1080x1920, 60 fps
+cl() { [ -s $M/$1.mp4 ] || ffmpeg -v error -y -ss $3 -t $4 -i $S/$2 -vf "scale=1080:1920:flags=lanczos" -c:v libx264 -preset medium -crf 14 -pix_fmt yuv420p -r 60 -an $M/$1.mp4; }
+cl wasser v3959.mov 0.6 3.0
+cl jogger v3965.mov 0.6 3.0
+cl barber barber.mov 6.2 3.0
 # Puff-Print: Ausschnitt um das Brust-Logo aus dem 4K-HDR-Original, nach SDR, 900x900 (verkleinert)
 HDR="zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
 if [ ! -s $M/puff.mp4 ]; then
@@ -46,6 +56,8 @@ def rgb(p):
 rgb(f"{S}/poster.png").save(f"{M}/poster.jpg", quality=95)
 rgb(f"{S}/glitzer.png").save(f"{M}/glitzer.jpg", quality=95)
 im = rgb(f"{S}/stack_chat.jpg"); im.resize((1080, round(1080 * im.height / im.width)), Image.LANCZOS).save(f"{M}/stack.jpg", quality=95)
+for i, name in ((11, "karo"), (12, "ykk"), (13, "stick"), (14, "saum"), (15, "nylon_model")):
+    im = rgb(f"{S}/d{i}.jpg"); im.resize((1080, round(1080 * im.height / im.width)), Image.LANCZOS).save(f"{M}/{name}.jpg", quality=95)
 print("Bilder ok")
 EOF
 mkdir -p public_main

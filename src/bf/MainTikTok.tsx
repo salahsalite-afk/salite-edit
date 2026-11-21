@@ -109,7 +109,7 @@ const vidNode = (file: string, a: number, trim: number, rate = 1) => () => (
 // Poster: Nylon-Set heranzoomen (nie über Originalgröße)
 const NY = { cx: 812, cy: 1180 };
 const nylonNode = (s: number) => {
-  const p = ease(s, 14.55, 0.7, IO);
+  const p = ease(s, 16.45, 0.7, IO);
   const W = 900;
   const H = 1000;
   const k0 = W / 1440; // ganzes Poster
@@ -158,7 +158,16 @@ const CARDS: Card[] = [
   { a: 9.5, e: 10.62, w: 860, h: 860, cy: 860, node: vidNode("puff.mp4", 9.5, 0.3), dark: true },
   { a: 10.65, e: 11.97, w: 800, h: 1200, cy: 860, node: imgNode("glitzer.jpg") },
   { a: 12.0, e: 13.36, w: 720, h: 1280, cy: 880, node: imgNode("stack.jpg"), dark: true },
-  { a: 14.25, e: 18.98, w: 900, h: 1000, cy: 840, node: (s) => nylonNode(s) },
+  { a: 14.25, e: 14.97, w: 800, h: 1000, cy: 860, node: imgNode("nylon_model.jpg") },
+  { a: 15.0, e: 16.17, w: 720, h: 1280, cy: 860, node: vidNode("wasser.mp4", 15.0, 0.6), dark: true },
+  { a: 16.2, e: 18.98, w: 900, h: 1000, cy: 840, node: (s) => nylonNode(s) },
+  // Details statt Liste (Kunde): Stick, YKK Zip, Karo Muster, verstellbare Jogger
+  { a: 19.2, e: 20.12, w: 800, h: 1067, cy: 860, node: imgNode("stick.jpg"), dark: true },
+  { a: 20.15, e: 21.02, w: 800, h: 1067, cy: 860, node: imgNode("ykk.jpg"), dark: true },
+  { a: 21.05, e: 21.92, w: 800, h: 1067, cy: 860, node: imgNode("karo.jpg"), dark: true },
+  { a: 21.95, e: 23.15, w: 720, h: 1280, cy: 860, node: vidNode("jogger.mp4", 21.95, 0.6), dark: true },
+  // Ressourcen nicht gespart: Barberstuhl
+  { a: 23.3, e: 25.3, w: 720, h: 1280, cy: 860, node: vidNode("barber.mp4", 23.3, 0.2), dark: true },
   { a: 27.6, e: 29.93, w: 680, h: 1209, cy: 860, node: vidNode("web.mp4", 27.6, 0.2), dark: true },
   { a: 33.3, e: 34.22, w: 972, h: (LINEUP.y1 - LINEUP.y0) * (972 / 1440), cy: 820, node: lineupNode },
 ];
@@ -174,6 +183,9 @@ const FILL = { a: 3.233, e: 6.5, src: 1.62, rate: 0.5 };
 const BLUR_HOLD: [number, number][] = [
   [3.04, 6.48],
   [9.5, 13.36],
+  [14.25, 18.98],
+  [19.2, 23.15],
+  [23.3, 25.3],
 ];
 const blurAt = (s: number) =>
   [...CARDS.map((c) => [c.a, c.e] as [number, number]), ...BLUR_HOLD].reduce((m, [a, e]) => {
@@ -219,10 +231,10 @@ const Chip: React.FC<{ children: React.ReactNode; p: number; style?: React.CSSPr
   <div style={{ position: "absolute", display: "flex", alignItems: "center", gap: 12, background: "#FFFFFF", borderRadius: 18, padding: "14px 24px", boxShadow: "0 14px 36px rgba(0,0,0,0.3)", fontFamily: "'Inter'", fontWeight: 700, fontSize: 30, letterSpacing: "0.04em", color: INK, whiteSpace: "nowrap", opacity: p, transform: `translateY(${(1 - p) * 24}px) scale(${0.9 + 0.1 * p})`, ...style }}>{children}</div>
 );
 const NylonInfo: React.FC<{ s: number }> = ({ s }) => {
-  if (s < 14.9 || s >= 18.98) return null;
+  if (s < 15.0 || s >= 18.98) return null;
   const out = 1 - interpolate(s, [18.88, 18.98], [0, 1], clamp);
-  const pW = ease(s, 14.94, 0.3);
-  const pA = ease(s, 15.84, 0.3);
+  const pW = ease(s, 15.05, 0.3) * (1 - interpolate(s, [16.05, 16.17], [0, 1], clamp));
+  const pA = ease(s, 16.3, 0.3);
   const pP = ease(s, 17.06, 0.3);
   return (
     <div style={{ position: "absolute", inset: 0, opacity: out }}>
@@ -243,7 +255,7 @@ const NylonInfo: React.FC<{ s: number }> = ({ s }) => {
 
 // SOLD OUT Stempel auf Rot (Poster-Zeile)
 const SoldOut: React.FC<{ s: number }> = ({ s }) => {
-  const c = CARDS[7];
+  const c = CARDS.find((x) => x.a === 33.3)!;
   if (s < 33.8 || s >= c.e) return null;
   const p = ease(s, 33.8, 0.18);
   const k = 972 / 1440;
@@ -314,36 +326,6 @@ const Visitors: React.FC<{ s: number }> = ({ s }) => {
     <div style={{ position: "absolute", left: 0, right: 80, top: 1040, display: "flex", flexDirection: "column", alignItems: "center", opacity: p, transform: `translateY(${(1 - p) * 30}px)` }}>
       <div style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 30, letterSpacing: "0.2em", color: "#FFFFFF", textShadow: "0 2px 14px rgba(0,0,0,0.9)" }}>LEUTE AUF DER WEBSEITE</div>
       <div style={{ fontFamily: "'Anton'", fontSize: 210, lineHeight: 1.05, color: "#FFFFFF", textShadow: "0 8px 30px rgba(0,0,0,0.5)" }}>{txt}+</div>
-    </div>
-  );
-};
-
-// ---------- Liste: Nylon-Details ----------
-const ITEMS: [string, number][] = [
-  ["HOCHWERTIGER STICK", 19.28],
-  ["YKK ZIP", 20.2],
-  ["KARO MUSTER", 21.1],
-  ["VERSTELLBARE JOGGER", 22.02],
-];
-const List: React.FC<{ s: number }> = ({ s }) => {
-  if (s < 19.15 || s >= 23.15) return null;
-  const p = ease(s, 19.15, 0.3) * (1 - interpolate(s, [23.0, 23.15], [0, 1], clamp));
-  return (
-    <div style={{ position: "absolute", left: 80, top: 250, width: 760, background: "rgba(255,255,255,0.96)", borderRadius: 28, padding: "26px 34px", boxShadow: "0 24px 60px rgba(0,0,0,0.35)", opacity: p, transform: `translateY(${(1 - p) * -30}px)` }}>
-      <div style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 22, letterSpacing: "0.28em", color: "#8A8A8A", marginBottom: 10 }}>NYLON TRACKSUIT</div>
-      {ITEMS.map(([label, at], i) => {
-        const q = ease(s, at, 0.25);
-        return (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: 20, padding: "14px 0", borderTop: i ? "1px solid #E6E6E6" : "none", opacity: 0.25 + 0.75 * q }}>
-            <div style={{ width: 40, height: 40, borderRadius: 20, background: q > 0 ? INK : "#DDD", display: "flex", alignItems: "center", justifyContent: "center", transform: `scale(${0.7 + 0.3 * q})` }}>
-              <svg width={22} height={22} viewBox="0 0 22 22">
-                <path d="M5 11.5 L9.5 16 L17 6.5" stroke="#FFF" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={20} strokeDashoffset={20 * (1 - q)} />
-              </svg>
-            </div>
-            <div style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 38, color: INK }}>{label}</div>
-          </div>
-        );
-      })}
     </div>
   );
 };
@@ -431,6 +413,76 @@ const CommentSheet: React.FC<{ s: number }> = ({ s }) => {
   );
 };
 
+// ---------- "keine Winterjacke": Puffer-Jacke erscheint und wird durchgestrichen ----------
+const PUFFER = { a: 5.5, strike: 5.82, e: 6.42 };
+const Puffer: React.FC<{ s: number }> = ({ s }) => {
+  if (s < PUFFER.a || s >= PUFFER.e) return null;
+  const p = ease(s, PUFFER.a, 0.2);
+  const out = 1 - interpolate(s, [PUFFER.e - 0.15, PUFFER.e], [0, 1], clamp);
+  const st = interpolate(s, [PUFFER.strike, PUFFER.strike + 0.12], [0, 1], { ...clamp, easing: Easing.out(Easing.cubic) });
+  const q = [78, 100, 122, 144, 166];
+  return (
+    <div style={{ position: "absolute", left: 540 - 230, top: 330, width: 460, height: 460, borderRadius: 40, background: "#FFFFFF", boxShadow: "0 24px 60px rgba(0,0,0,0.45)", opacity: p * out, transform: `scale(${0.8 + 0.2 * p})` }}>
+      <svg width={460} height={460} viewBox="0 0 200 200">
+        <path d="M54 58 L30 70 Q20 75 20 88 L17 158 Q17 167 26 167 L40 167 Q47 167 47 159 L51 100 Z" fill="#232323" />
+        <path d="M146 58 L170 70 Q180 75 180 88 L183 158 Q183 167 174 167 L160 167 Q153 167 153 159 L149 100 Z" fill="#232323" />
+        <path d="M58 48 Q100 36 142 48 L152 62 L155 172 Q155 182 145 182 L55 182 Q45 182 45 172 L48 62 Z" fill="#2E2E2E" />
+        <path d="M68 30 Q100 22 132 30 L138 52 Q100 44 62 52 Z" fill="#1B1B1B" />
+        {q.map((y) => (
+          <path key={y} d={`M47 ${y} Q100 ${y + 7} 153 ${y}`} stroke="#5A5A5A" strokeWidth={3} fill="none" />
+        ))}
+        {[92, 118, 144].map((y) => (
+          <g key={y}>
+            <path d={`M20 ${y} Q34 ${y + 4} 50 ${y}`} stroke="#5A5A5A" strokeWidth={3} fill="none" />
+            <path d={`M150 ${y} Q166 ${y + 4} 180 ${y}`} stroke="#5A5A5A" strokeWidth={3} fill="none" />
+          </g>
+        ))}
+        <line x1="100" y1="46" x2="100" y2="182" stroke="#9A9A9A" strokeWidth={3} />
+      </svg>
+      <div style={{ position: "absolute", left: -10, top: 214, height: 26, width: `calc(${st * 100}% + ${st * 20}px)`, background: RED, borderRadius: 13, transform: "rotate(-38deg)", transformOrigin: "left center", boxShadow: "0 4px 14px rgba(0,0,0,0.35)", marginLeft: 0, translate: "40px 150px" }} />
+    </div>
+  );
+};
+
+// ---------- Hook (Kunde: plakativ, provokant): ACHTUNG, 1 € Drops und Fake Sales durchgestrichen ----------
+const STRIKES: { a: number; e: number; text: string; strike?: number }[] = [
+  { a: 0.64, e: 1.15, text: "1 € DROPS", strike: 0.84 },
+  { a: 1.15, e: 1.6, text: "FAKE SALES", strike: 1.32 },
+  { a: 1.6, e: 2.95, text: "NICHT BEI UNS." },
+];
+const Hook: React.FC<{ s: number }> = ({ s }) => {
+  if (s >= 2.95) return null;
+  if (s < 0.64) {
+    const blink = s < 0.16 || (s >= 0.26 && s < 0.64) ? 1 : 0.15;
+    const p = ease(s, 0, 0.12);
+    return (
+      <div style={{ position: "absolute", left: 0, right: 80, top: 300, display: "flex", justifyContent: "center", opacity: blink * p, transform: `scale(${1.25 - 0.25 * p})` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 22, background: RED, borderRadius: 22, padding: "16px 40px 10px 30px", boxShadow: "0 18px 50px rgba(0,0,0,0.4)" }}>
+          <svg width={78} height={70} viewBox="0 0 26 23">
+            <path d="M13 1.5 L25 22 H1 Z" fill="none" stroke="#FFF" strokeWidth={2.4} strokeLinejoin="round" />
+            <path d="M13 8 V15" stroke="#FFF" strokeWidth={2.6} strokeLinecap="round" />
+            <circle cx={13} cy={18.6} r={1.5} fill="#FFF" />
+          </svg>
+          <div style={{ fontFamily: "'Anton'", fontSize: 110, lineHeight: 1, color: "#FFFFFF", letterSpacing: "0.02em" }}>ACHTUNG</div>
+        </div>
+      </div>
+    );
+  }
+  const it = STRIKES.find((x) => s >= x.a && s < x.e);
+  if (!it) return null;
+  const p = ease(s, it.a, 0.18);
+  const out = it.e === 2.95 ? 1 - interpolate(s, [2.8, 2.95], [0, 1], clamp) : 1;
+  const st = it.strike ? interpolate(s, [it.strike, it.strike + 0.12], [0, 1], { ...clamp, easing: Easing.out(Easing.cubic) }) : 0;
+  return (
+    <div style={{ position: "absolute", left: 0, right: 80, top: 290, display: "flex", justifyContent: "center", opacity: p * out, transform: `scale(${1.15 - 0.15 * p})` }}>
+      <div style={{ position: "relative", fontFamily: "'Anton'", fontSize: it.strike ? 170 : 150, lineHeight: 1, color: "#FFFFFF", textShadow: "0 10px 36px rgba(0,0,0,0.55)", whiteSpace: "nowrap" }}>
+        {it.text}
+        {it.strike ? <div style={{ position: "absolute", left: -20, top: "52%", height: 18, width: `calc(${st * 100}% + ${st * 40}px)`, background: RED, borderRadius: 9, transform: "rotate(-6deg)", transformOrigin: "left center", boxShadow: "0 4px 14px rgba(0,0,0,0.35)" }} /> : null}
+      </div>
+    </div>
+  );
+};
+
 // ---------- Schluss: Black Week Infos ----------
 const INFOS: [string, number, boolean][] = [
   ["BLACK FRIDAY", 38.1, false],
@@ -481,7 +533,6 @@ export const MainTikTok: React.FC = () => {
         </div>
       </div>
       <Visitors s={s} />
-      <List s={s} />
       {CARDS.map((c, i) => (
         <CardView key={i} c={c} s={s} t={t} />
       ))}
@@ -491,6 +542,8 @@ export const MainTikTok: React.FC = () => {
       <Follow s={s} a={30.35} check={31.0} e={31.3} />
       <Follow s={s} a={36.95} check={37.6} e={38.1} />
       <Infos s={s} />
+      <Hook s={s} />
+      <Puffer s={s} />
       <CommentSheet s={s} />
       <Captions s={s} hidden={s >= SHEET.a && s < SHEET.e} />
     </AbsoluteFill>
