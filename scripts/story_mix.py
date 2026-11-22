@@ -2,8 +2,7 @@
 
 python scripts/story_mix.py <story_dir> <sfx_dir> <out.wav>
 - Stimme gesäubert, -14 LUFS, Ende direkt nach dem letzten Wort
-- bis "dass es einen 550 GSM Trackie": dunkle Fläche plus Herzschlag (schneller werdend), Scratch auf der Wendung
-- ab der Wendung der Beat (Drop auf "550"), leise, im Takt verlängert, unter der Stimme abgesenkt
+- V2: keine Musik (Kunde), nur leise echte Geräusche (Reißen, Vibration, Nachrichtenton, Klick, Tippen)
 - Effekte einzeln auf ein gemessenes Ziel relativ zur Stimme
 """
 import json
@@ -69,61 +68,23 @@ def place(at, x, target, peak_ms=50):
         fx[i : i + m] += x[:m] * gain
 
 
-pad = load(f"{SND}/tension.wav")[: int(10.65 * SR)].copy()
-k = int(0.06 * SR)
-pad[-k:] *= np.linspace(1, 0, k)[:, None]
-place(0.0, pad, -26, peak_ms=400)
-for at in (0.0, 0.85, 1.7, 6.3, 7.05, 7.75, 8.4, 9.0, 9.55, 10.05):
-    place(at, load(f"{SND}/heart.wav"), -18)
-
-# 3) Beat ab der Wendung: Drop (Beat-Zeit 6,79) auf "550" (11,24 s), Schleifen an Taktgrenzen
-BEAT, DROP_B, DROP_OUT, START = 0.441, 6.79, 11.24, 10.72
-BAR = 4 * BEAT
-beat = load(f"{D}/beat.wav")
-loop_end = DROP_B + 8 * BAR
-parts = [(DROP_B - (DROP_OUT - START), loop_end)]
-need = (TOTAL - START) - (parts[0][1] - parts[0][0])
-while need > 0:
-    seg = min(need, loop_end - DROP_B)
-    parts.append((DROP_B, DROP_B + seg))
-    need -= seg
-bt = np.zeros((0, 2))
-xf = int(0.012 * SR)
-for a, b in parts:
-    x = beat[int(a * SR) : int(b * SR)].copy()
-    if len(bt):
-        x[:xf] *= np.linspace(0, 1, xf)[:, None]
-        bt[-xf:] *= np.linspace(1, 0, xf)[:, None]
-        bt = np.concatenate([bt[:-xf], bt[-xf:] + x[:xf], x[xf:]])
-    else:
-        bt = x
-lb = lufs_arr(beat[int(DROP_B * SR) : int(loop_end * SR)], "b")
-bt *= 10 ** ((-36 - lb) / 20)  # leise wie im Main-TikTok (rund 20 dB unter der Stimme)
+# V2 (Kunde): keine Musik, keine Spannungsfläche, kein Herzschlag, kein Scratch. Nur echte, leise Geräusche.
 full = np.zeros((N, 2))
-i0 = int(START * SR)
-m = min(len(bt), N - i0)
-full[i0 : i0 + m] = bt[:m]
-t = np.arange(N) / SR
-full *= np.clip((t - START) / 0.05, 0, 1)[:, None] * np.clip((TOTAL - t) / 0.35, 0, 1)[:, None]
 
 # 4) Effekte
 EV = [
-    (1.8, f"{SND}/tear.wav", -16),
-    (3.3, f"{SFX_DIR}/whoosh_soft.wav", -20),
-    (4.88, f"{SND}/buzz.wav", -18),
+    (1.85, f"{SND}/tear.wav", -18),
+    (4.9, f"{SND}/buzz.wav", -18),
     (8.92, f"{SFX_DIR}/click.wav", -22),
-    (10.6, f"{SND}/scratch.wav", -14),
     (11.0, f"{SND}/ding.wav", -22),
     (14.6, f"{SND}/ding.wav", -22),
     (17.3, f"{SND}/ding.wav", -22),
-    (18.95, f"{SND}/ding.wav", -22),
-    (21.02, f"{SND}/ding.wav", -22),
-    (22.45, f"{SND}/mouse.wav", -16),
-    (23.3, f"{SFX_DIR}/tick.wav", -20),
-    (23.84, f"{SFX_DIR}/hit_low.wav", -18),
-    (24.9, f"{SND}/mouse.wav", -16),
+    (18.6, f"{SND}/ding.wav", -22),
+    (21.0, f"{SND}/ding.wav", -22),
+    (22.45, f"{SND}/mouse.wav", -18),
+    (24.9, f"{SND}/mouse.wav", -18),
     (30.55, f"{SFX_DIR}/click.wav", -20),
-    (31.58, f"{SFX_DIR}/notify.wav", -18),
+    (31.58, f"{SFX_DIR}/notify.wav", -20),
 ]
 COMMENT = "Ich brauche ein Passwort"
 TA, TE = 28.8, 30.42
@@ -138,5 +99,4 @@ lm = lufs_arr(mix, "mix")
 mix *= 10 ** ((-14 - lm) / 20)
 sf.write("/dev/shm/rtmp/_sm_pre.wav", mix.astype(np.float32), SR)
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", "/dev/shm/rtmp/_sm_pre.wav", "-af", "alimiter=limit=0.89:attack=3:release=60:level=false", "-ar", str(SR), "-c:a", "pcm_s24le", OUT], check=True)
-vb = mov_rms(full.mean(1), int(0.4 * SR))
-print(json.dumps({"final_lufs": round(lufs(OUT), 1), "beat_rel_stimme_db": round(20 * np.log10(np.percentile(vb[vb > 1e-5], 70)) - ref, 1), "beat_teile": [(round(a, 2), round(b, 2)) for a, b in parts]}))
+print(json.dumps({"final_lufs": round(lufs(OUT), 1), "effekte": len(EV)}))

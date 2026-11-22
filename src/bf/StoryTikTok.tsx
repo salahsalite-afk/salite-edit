@@ -3,8 +3,9 @@ import { AbsoluteFill, Easing, Img, interpolate, OffthreadVideo, Sequence, stati
 import { loadFonts } from "../story/LineupPan";
 
 // Story-TikTok "Meine Freundin ist mit meinem besten Freund fremdgegangen" (Wendung: es geht um den Trackie).
-// Hook: Pärchen-Foto reißt, TikTok-Titel. Beweis: iPhone mit Benachrichtigung und iMessage-Verlauf, ihre Nachrichten
-// und Fotos genau zu den Worten. Danach Poster, Preis, Passwort-Seite, KOMMENTAR, FOLGEN.
+// V2 (Kunde): kein Titel, kein Gesichtskreis, keine Musik. Alles nur kurz einblenden, dazwischen Gesicht und Körpersprache.
+// Pärchen-Foto reißt kurz, Billard mit SJ als bestem Freund, iPhone kurz (Mitteilung von "Cindy", Chat öffnet),
+// ihre Nachrichten als iMessage-Blasen unter dem Gesicht, Poster, Passwort-Seite, letzte Größen, KOMMENTAR, FOLGEN.
 // Ton mischt scripts/story_mix.py, das Bild wird stumm gerendert.
 export const ST = { fps: 60, width: 1080, height: 1920 };
 const f = (s: number) => Math.round(s * ST.fps);
@@ -73,39 +74,26 @@ const cam = (t: number) => {
 };
 
 // Zeitfenster, in denen eine Ebene über dem Video liegt (Hintergrund unscharf)
+// V2 (Kunde): alles nur kurz einblenden, dazwischen Gesicht und Körpersprache
 const OVER: [number, number][] = [
-  [0.15, 2.46],
-  [3.3, 6.0],
-  [7.55, 22.36],
-  [22.45, 26.9],
+  [0.85, 2.1],
+  [3.45, 4.5],
+  [4.85, 5.95],
+  [8.55, 10.1],
+  [22.45, 23.85],
+  [24.9, 26.35],
 ];
 const blurAt = (t: number) => OVER.reduce((m, [a, e]) => Math.max(m, interpolate(t, [a - 0.02, a + 0.2, e - 0.15, e + 0.02], [0, 1, 1, 0], clamp)), 0);
 
 // ---------- Hook: TikTok-Titel und Pärchen-Foto, das bei "fremdgegangen" zerreißt ----------
-const Title: React.FC<{ t: number }> = ({ t }) => {
-  if (t >= 4.56) return null;
-  const p = ease(t, 0.05, 0.25) * (1 - interpolate(t, [4.4, 4.56], [0, 1], clamp));
-  const line = (txt: React.ReactNode) => (
-    <div style={{ display: "inline-block", background: "#FFFFFF", color: "#000000", fontFamily: "'Inter'", fontWeight: 700, fontSize: 46, lineHeight: 1.2, padding: "8px 18px", borderRadius: 12, marginTop: -2 }}>{txt}</div>
-  );
-  return (
-    <div style={{ position: "absolute", left: 40, right: 140, top: 236, textAlign: "center", opacity: p, transform: `translateY(${(1 - p) * -16}px)` }}>
-      {line(<>POV: Du siehst DIESE Nachricht</>)}
-      <br />
-      {line(<>auf dem Handy von deinem</>)}
-      <br />
-      {line(<>besten Freund</>)}
-    </div>
-  );
-};
 const JAG = [0.5, 0.47, 0.53, 0.46, 0.52, 0.48, 0.55, 0.49, 0.51, 0.46, 0.53, 0.5];
 const Torn: React.FC<{ t: number }> = ({ t }) => {
-  if (t < 0.15 || t >= 2.46) return null;
+  if (t < 0.85 || t >= 2.1) return null;
   const W = 640;
   const H = 853;
-  const p = ease(t, 0.15, 0.3);
-  const tear = ease(t, 1.8, 0.35, Easing.out(Easing.cubic));
-  const out = interpolate(t, [2.3, 2.46], [1, 0], clamp);
+  const p = ease(t, 0.85, 0.2);
+  const tear = ease(t, 1.85, 0.25, Easing.out(Easing.cubic));
+  const out = interpolate(t, [1.98, 2.1], [1, 0], clamp);
   const pts = JAG.map((x, i) => `${x * 100}% ${(i / (JAG.length - 1)) * 100}%`);
   const left = `polygon(0% 0%, ${pts.join(", ")}, 0% 100%)`;
   const right = `polygon(100% 0%, ${pts.join(", ")}, 100% 100%)`;
@@ -127,10 +115,10 @@ const Torn: React.FC<{ t: number }> = ({ t }) => {
 // ---------- Karten (Billard, Poster, Passwort-Seite) ----------
 type Card = { a: number; e: number; w: number; h: number; cy: number; node: () => React.ReactNode; click?: boolean };
 const CARDS: Card[] = [
-  { a: 3.3, e: 4.58, w: 600, h: 1067, cy: 980, node: () => <Img src={staticFile("story/img/billard.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> },
-  { a: 22.45, e: 24.85, w: 860, h: 1075, cy: 840, click: true, node: () => <Img src={staticFile("story/img/poster.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> },
+  { a: 3.45, e: 4.5, w: 600, h: 1067, cy: 980, node: () => <Img src={staticFile("story/img/billard.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> },
+  { a: 22.45, e: 23.85, w: 860, h: 1075, cy: 840, click: true, node: () => <Img src={staticFile("story/img/poster.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> },
   {
-    a: 24.9, e: 26.9, w: 640, h: 1138, cy: 840, click: true,
+    a: 24.9, e: 26.35, w: 640, h: 1138, cy: 840, click: true,
     node: () => (
       <Sequence from={f(24.9)} layout="none">
         <OffthreadVideo src={staticFile("story/web.mp4")} trimBefore={12} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -172,11 +160,11 @@ const Chip: React.FC<{ children: React.ReactNode; p: number; style?: React.CSSPr
   <div style={{ position: "absolute", display: "flex", alignItems: "center", gap: 14, borderRadius: 20, padding: "12px 26px", boxShadow: "0 14px 36px rgba(0,0,0,0.35)", whiteSpace: "nowrap", opacity: p, transform: `translateY(${(1 - p) * 24}px) scale(${0.9 + 0.1 * p})`, ...style }}>{children}</div>
 );
 const Offer: React.FC<{ t: number }> = ({ t }) => {
-  if (t < 23.2 || t >= 26.9) return null;
-  const pP = ease(t, 23.3, 0.3);
-  const p80 = ease(t, 23.84, 0.25);
-  const pPw = ease(t, 25.76, 0.3);
-  const posterOut = 1 - interpolate(t, [24.75, 24.85], [0, 1], clamp);
+  if (t < 22.8 || t >= 26.35) return null;
+  const pP = ease(t, 22.9, 0.25);
+  const p80 = ease(t, 23.3, 0.22);
+  const pPw = ease(t, 25.6, 0.25) * (1 - interpolate(t, [26.25, 26.35], [0, 1], clamp));
+  const posterOut = 1 - interpolate(t, [23.75, 23.85], [0, 1], clamp);
   return (
     <>
       <div style={{ opacity: posterOut }}>
@@ -188,7 +176,7 @@ const Offer: React.FC<{ t: number }> = ({ t }) => {
           <span style={{ fontFamily: "'Anton'", fontSize: 76, color: "#FFFFFF" }}>BIS ZU 80 %</span>
         </Chip>
       </div>
-      {t >= 25.7 && (
+      {t >= 25.55 && (
         <Chip p={pPw} style={{ left: 250, top: 1180, background: INK }}>
           <svg width={30} height={36} viewBox="0 0 20 24">
             <rect x={2} y={10} width={16} height={12} rx={3} fill="#FFF" />
@@ -203,7 +191,6 @@ const Offer: React.FC<{ t: number }> = ({ t }) => {
 
 // ---------- iPhone mit Sperrbildschirm und iMessage ----------
 const PH = { x: 250, y: 210, w: 580, h: 1189 };
-const Blurred: React.FC<{ w: number; h?: number }> = ({ w, h = 30 }) => <span style={{ display: "inline-block", width: w, height: h, borderRadius: h / 2, background: "rgba(0,0,0,0.55)", filter: "blur(6px)", verticalAlign: "middle" }} />;
 const StatusBar: React.FC<{ dark?: boolean }> = ({ dark }) => {
   const c = dark ? "#000" : "#FFF";
   return (
@@ -223,7 +210,7 @@ const MsgIcon: React.FC<{ s: number }> = ({ s }) => (
   </div>
 );
 const LockScreen: React.FC<{ t: number }> = ({ t }) => {
-  const nIn = ease(t, 4.88, 0.35);
+  const nIn = ease(t, 4.95, 0.3);
   const tap = interpolate(t, [8.88, 8.96, 9.06], [1, 0.96, 1], clamp);
   return (
     <AbsoluteFill style={{ background: "linear-gradient(170deg, #20263a 0%, #3b2d4f 55%, #5a3a4a 100%)" }}>
@@ -234,7 +221,7 @@ const LockScreen: React.FC<{ t: number }> = ({ t }) => {
         <MsgIcon s={70} />
         <div style={{ flex: 1, fontFamily: "'Inter'" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Blurred w={150} h={26} />
+            <span style={{ fontWeight: 700, fontSize: 25, color: "#1C1C1E" }}>Cindy</span>
             <span style={{ fontWeight: 600, fontSize: 21, color: "#6B6B70" }}>jetzt</span>
           </div>
           <div style={{ fontWeight: 600, fontSize: 25, color: "#1C1C1E", marginTop: 6 }}>Benachrichtigung</div>
@@ -255,12 +242,7 @@ const MSGS: Msg[] = [
   { at: 21.02, text: "perfekter Stack auf die Schuhe" },
   { at: 21.6, img: "stack.jpg", ih: 534 },
 ];
-const TYPING: [number, number][] = [
-  [9.6, 11.0],
-  [14.2, 14.6],
-  [16.95, 17.3],
-  [20.55, 21.02],
-];
+const TYPING: [number, number][] = [[9.35, 10.1]];
 const Typing: React.FC<{ t: number }> = ({ t }) => {
   const on = TYPING.find(([a, e]) => t >= a && t < e);
   if (!on) return null;
@@ -273,7 +255,7 @@ const Typing: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 const Chat: React.FC<{ t: number }> = ({ t }) => {
-  const visible = MSGS.filter((m) => t >= m.at);
+  const visible = MSGS.filter((m) => t >= m.at && m.at < 10.1);
   return (
     <AbsoluteFill style={{ background: "#FFFFFF" }}>
       <StatusBar dark />
@@ -282,9 +264,9 @@ const Chat: React.FC<{ t: number }> = ({ t }) => {
         <svg width={26} height={44} viewBox="0 0 13 22" style={{ position: "absolute", left: 24, top: 40 }}><path d="M11 2 L2 11 L11 20" stroke="#0A84FF" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
         <div style={{ position: "absolute", left: 0, right: 0, top: 8, display: "flex", flexDirection: "column", alignItems: "center" }}>
           <div style={{ width: 84, height: 84, borderRadius: 42, overflow: "hidden", background: "#C7C7CC" }}>
-            <Img src={staticFile("story/img/selfie.jpg")} style={{ width: "100%", height: "180%", objectFit: "cover", objectPosition: "50% 22%", filter: "blur(9px)", transform: "scale(1.3)" }} />
+            <Img src={staticFile("story/img/selfie.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "38% 24%", transform: "scale(2.2)", transformOrigin: "38% 30%" }} />
           </div>
-          <div style={{ marginTop: 8 }}><Blurred w={130} h={22} /></div>
+          <div style={{ marginTop: 6, fontFamily: "'Inter'", fontWeight: 600, fontSize: 22, color: "#1C1C1E" }}>Cindy ›</div>
         </div>
         <svg width={44} height={30} viewBox="0 0 30 20" style={{ position: "absolute", right: 28, top: 46 }}><rect x={1} y={3} width={19} height={14} rx={4} fill="none" stroke="#0A84FF" strokeWidth={2.4} /><path d="M21 8 L28 4 V16 L21 12 Z" fill="#0A84FF" /></svg>
       </div>
@@ -318,16 +300,16 @@ const Chat: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 const Phone: React.FC<{ t: number }> = ({ t }) => {
-  const seg1 = t >= 4.58 && t < 6.0;
-  const seg2 = t >= 7.55 && t < 22.36;
+  const seg1 = t >= 4.85 && t < 5.95;
+  const seg2 = t >= 8.55 && t < 10.1;
   if (!seg1 && !seg2) return null;
-  const a = seg1 ? 4.58 : 7.55;
-  const e = seg1 ? 6.0 : 22.36;
-  const inP = ease(t, a, 0.35);
-  const outP = interpolate(t, [e - 0.2, e], [0, 1], { ...clamp, easing: Easing.in(Easing.cubic) });
-  const open = seg2 ? ease(t, 8.98, 0.4) : 0;
+  const a = seg1 ? 4.85 : 8.55;
+  const e = seg1 ? 5.95 : 10.1;
+  const inP = ease(t, a, 0.22);
+  const outP = interpolate(t, [e - 0.14, e], [0, 1], { ...clamp, easing: Easing.in(Easing.cubic) });
+  const open = seg2 ? ease(t, 8.98, 0.3) : 0;
   return (
-    <div style={{ position: "absolute", left: PH.x, top: PH.y, width: PH.w, height: PH.h, transform: `translateY(${(1 - inP) * 260 + outP * 300}px) rotate(${(1 - inP) * 4}deg)`, opacity: Math.min(1, inP * 2) * (1 - outP) }}>
+    <div style={{ position: "absolute", left: PH.x, top: PH.y, width: PH.w, height: PH.h, transform: `translateY(${(1 - inP) * 200 + outP * 240 + 60}px) scale(0.9)`, transformOrigin: "50% 0%", opacity: Math.min(1, inP * 2) * (1 - outP) }}>
       {/* Rahmen */}
       <div style={{ position: "absolute", inset: 0, borderRadius: 92, background: "linear-gradient(145deg, #d9dcdf, #9a9ea3 40%, #e4e6e8 60%, #8b8f94)", boxShadow: "0 40px 90px rgba(0,0,0,0.55)" }} />
       <div style={{ position: "absolute", left: -5, top: 230, width: 6, height: 80, borderRadius: 3, background: "#a3a7ab" }} />
@@ -348,19 +330,73 @@ const Phone: React.FC<{ t: number }> = ({ t }) => {
     </div>
   );
 };
-// Gesicht als runde Einblendung, solange das Handy groß im Bild ist
-const FaceCam: React.FC<{ t: number }> = ({ t }) => {
-  const on = (t >= 4.7 && t < 6.0) || (t >= 7.7 && t < 22.3);
-  if (!on) return null;
-  const a = t < 6.0 ? 4.7 : 7.7;
-  const e = t < 6.0 ? 6.0 : 22.3;
-  const p = ease(t, a, 0.3) * (1 - interpolate(t, [e - 0.2, e], [0, 1], clamp));
-  const S = 210;
-  const k = 1.25;
+// ---------- SJ als bester Freund (auf dem Billard-Foto) ----------
+const SjTag: React.FC<{ t: number }> = ({ t }) => {
+  if (t < 3.6 || t >= 4.45) return null;
+  const p = ease(t, 3.6, 0.2) * (1 - interpolate(t, [4.35, 4.45], [0, 1], clamp));
   return (
-    <div style={{ position: "absolute", left: 30, top: 250, width: S, height: S, borderRadius: "50%", overflow: "hidden", border: "5px solid #FFFFFF", boxShadow: "0 12px 30px rgba(0,0,0,0.45)", opacity: p, transform: `scale(${0.8 + 0.2 * p})` }}>
-      <div style={{ position: "absolute", left: S / 2 - 540 * k, top: S / 2 - 545 * k, width: 1080 * k, height: 1920 * k }}>
-        <OffthreadVideo src={staticFile("story/story.mp4")} muted style={{ width: "100%", height: "100%" }} />
+    <div style={{ position: "absolute", left: 560, top: 760, opacity: p, transform: `translateY(${(1 - p) * 14}px)` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#FFFFFF", borderRadius: 30, padding: "10px 22px 10px 12px", boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}>
+        <div style={{ width: 46, height: 46, borderRadius: 23, background: "#1E1712", color: "#FFF", fontFamily: "'Inter'", fontWeight: 700, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>SJ</div>
+        <div style={{ fontFamily: "'Inter'", lineHeight: 1.1 }}>
+          <div style={{ fontWeight: 700, fontSize: 28, color: INK }}>SJ</div>
+          <div style={{ fontWeight: 600, fontSize: 21, color: "#6B6B70" }}>bester Freund</div>
+        </div>
+      </div>
+      <svg width={120} height={110} style={{ position: "absolute", left: 120, top: 70 }}><path d="M10 4 Q 40 60 104 100" stroke="#FFF" strokeWidth={4} fill="none" strokeLinecap="round" /><circle cx={104} cy={100} r={7} fill="#FFF" /></svg>
+    </div>
+  );
+};
+
+// ---------- Ihre Nachrichten: kurz als iMessage-Blasen, Fotos seitlich, Gesicht bleibt frei ----------
+type Bub = { a: number; e: number; text?: string; img?: string; side?: "left" | "right" };
+const BUBS: Bub[] = [
+  { a: 11.0, e: 12.8, text: "Es gibt einen 550 GSM Trackie für 69 €" },
+  { a: 14.6, e: 16.3, text: "und der ist qualitativ viel besser als früher" },
+  { a: 17.3, e: 18.5, img: "selfie.jpg", side: "left" },
+  { a: 18.6, e: 19.85, text: "der hat immer noch krassen Puff", img: "puff.jpg", side: "right" },
+  { a: 19.9, e: 20.95, text: "und Glitzersteine die nicht abgehen" },
+  { a: 21.0, e: 22.3, text: "perfekter Stack auf die Schuhe", img: "stack.jpg", side: "left" },
+];
+const Bubbles: React.FC<{ t: number }> = ({ t }) => {
+  const b = BUBS.find((x) => t >= x.a && t < x.e);
+  if (!b) return null;
+  const p = ease(t, b.a, 0.2);
+  const o = 1 - interpolate(t, [b.e - 0.14, b.e], [0, 1], clamp);
+  return (
+    <>
+      {b.img && (
+        <div style={{ position: "absolute", left: b.side === "left" ? 60 : 640, top: 560, width: 290, height: 516, borderRadius: 28, overflow: "hidden", boxShadow: "0 18px 44px rgba(0,0,0,0.45)", opacity: p * o, transform: `scale(${0.85 + 0.15 * p}) rotate(${b.side === "left" ? -3 : 3}deg)` }}>
+          <Img src={staticFile(`story/img/${b.img}`)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </div>
+      )}
+      {b.text && (
+        <div style={{ position: "absolute", left: 70, right: 150, top: 1120, display: "flex", flexDirection: "column", alignItems: "center", opacity: p * o, transform: `translateY(${(1 - p) * 30}px) scale(${0.9 + 0.1 * p})` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <MsgIcon s={30} />
+            <span style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 24, color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>Cindy</span>
+          </div>
+          <div style={{ maxWidth: 760, background: "#E9E9EB", color: "#000", fontFamily: "'Inter'", fontWeight: 600, fontSize: 40, lineHeight: 1.22, padding: "18px 30px", borderRadius: 36, boxShadow: "0 14px 36px rgba(0,0,0,0.35)", textAlign: "left" }}>{b.text}</div>
+        </div>
+      )}
+    </>
+  );
+};
+
+// ---------- Exklusiv: nur noch letzte Größen (passiv, oben) ----------
+const LastSizes: React.FC<{ t: number }> = ({ t }) => {
+  if (t < 26.45 || t >= 28.55) return null;
+  const p = ease(t, 26.45, 0.22) * (1 - interpolate(t, [28.4, 28.55], [0, 1], clamp));
+  const q = ease(t, 26.75, 0.22);
+  const dot = 0.5 + 0.5 * Math.abs(Math.sin((t - 26.45) * 4));
+  return (
+    <div style={{ position: "absolute", left: 0, right: 80, top: 250, display: "flex", flexDirection: "column", alignItems: "center", gap: 14, opacity: p }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, background: "#FFFFFF", borderRadius: 30, padding: "14px 28px", boxShadow: "0 12px 30px rgba(0,0,0,0.35)", transform: `translateY(${(1 - p) * -20}px)` }}>
+        <div style={{ width: 16, height: 16, borderRadius: 8, background: RED, opacity: dot }} />
+        <span style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 32, letterSpacing: "0.04em", color: INK }}>NUR NOCH LETZTE GRÖSSEN</span>
+      </div>
+      <div style={{ background: INK, borderRadius: 30, padding: "12px 26px", opacity: q, transform: `translateY(${(1 - q) * -14}px)` }}>
+        <span style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 28, letterSpacing: "0.12em", color: "#FFFFFF" }}>EXKLUSIV · NUR MIT PASSWORT</span>
       </div>
     </div>
   );
@@ -459,12 +495,13 @@ export const StoryTikTok: React.FC = () => {
       ))}
       <Offer t={t} />
       <Cursor t={t} />
+      <SjTag t={t} />
       <Phone t={t} />
-      <FaceCam t={t} />
-      <Title t={t} />
+      <Bubbles t={t} />
+      <LastSizes t={t} />
       <Follow t={t} a={30.95} check={31.58} e={33.9} />
       <CommentSheet t={t} />
-      <Captions t={t} hidden={(t >= SHEET.a && t < SHEET.e) || t < 2.46} />
+      <Captions t={t} hidden={t >= SHEET.a && t < SHEET.e} />
     </AbsoluteFill>
   );
 };
