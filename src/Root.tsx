@@ -15,6 +15,7 @@ import { GFPS, GTA_FRAMES, GtaBox } from "./bf/GtaBox";
 import { WA, WA_FRAMES, WaChannel } from "./bf/WaChannel";
 import { CB, CB_FRAMES, CutBeat } from "./bf/CutBeat";
 import { MT, MT_FRAMES, MainTikTok } from "./bf/MainTikTok";
+import { ST, ST_FRAMES, StoryTikTok } from "./bf/StoryTikTok";
 import { BEAMER, SafetyBeamer } from "./card/SafetyBeamer";
 import { BEAMER_CLEAN, SafetyBeamerClean } from "./card/SafetyBeamerClean";
 import { COMIC_CARD, COMIC_SLIDES, SafetyComicCard, SafetyComicSlides } from "./card/SafetyComic";
@@ -82,6 +83,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="GtaBox" component={GtaBox} defaultProps={{}} fps={GFPS} width={1080} height={1920} durationInFrames={GTA_FRAMES} />
     {/* WhatsApp-Kanal-Aufruf mit Passwort speichern */}
     <Composition id="WaChannel" component={WaChannel} defaultProps={{}} fps={WA.fps} width={WA.width} height={WA.height} durationInFrames={WA_FRAMES} />
+    {/* Story-TikTok: Freundin fremdgegangen (iMessage-Beweis, Wendung Trackie) */}
+    <Composition id="StoryTikTok" component={StoryTikTok} defaultProps={{}} fps={ST.fps} width={ST.width} height={ST.height} durationInFrames={ST_FRAMES} />
     {/* Main-TikTok Black Week: Animationen, Klick-Karten, Zahlen hinter den Personen */}
     <Composition id="MainTikTok" component={MainTikTok} defaultProps={{}} fps={MT.fps} width={MT.width} height={MT.height} durationInFrames={MT_FRAMES} />
     {/* Beat-Schnitt der 6 Clips (Drop, Zooms, Effekte) */}
