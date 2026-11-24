@@ -124,20 +124,22 @@ const HookPrice: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
-// ---------- bis zum Ende schauen: feiner Fortschrittsbalken oben ----------
+// ---------- bis zum Ende schauen: kleiner roter Balken direkt über den Untertiteln (Kunde: nicht aufs Gesicht) ----------
 const WatchBar: React.FC<{ t: number }> = ({ t }) => {
   if (t < 4.4) return null;
   const p = ease(t, 4.4, 0.4);
   const fill = interpolate(t, [4.4, 33.26], [0, 1], clamp);
   const done = t >= 33.26;
+  const pop = interpolate(t, [33.26, 33.36, 33.5], [1, 1.08, 1], clamp);
+  const col = done ? "#22C55E" : RED;
   return (
-    <div style={{ position: "absolute", top: 232, left: 90, right: 170, opacity: p * 0.95 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "'Inter'", fontWeight: 700, fontSize: 20, letterSpacing: "0.18em", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.6)", marginBottom: 8 }}>
-        <span>BIS ZUM ENDE</span>
-        <span>{done ? "GESCHAFFT" : "LONGSLEEVE 0 €"}</span>
-      </div>
-      <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.3)" }}>
-        <div style={{ width: `${fill * 100}%`, height: "100%", borderRadius: 4, background: done ? "#2BD46A" : "#FFFFFF" }} />
+    <div style={{ position: "absolute", top: 1332, left: 0, right: 80, display: "flex", justifyContent: "center", opacity: p, transform: `translateY(${(1 - p) * 14}px) scale(${pop})` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, background: "rgba(12,12,12,0.72)", borderRadius: 24, padding: "8px 10px 8px 18px" }}>
+        <span style={{ fontFamily: "'Inter'", fontWeight: 800, fontSize: 19, letterSpacing: "0.14em", color: "#FFFFFF" }}>{done ? "GESCHAFFT" : "BIS ZUM ENDE"}</span>
+        <div style={{ width: 230, height: 10, borderRadius: 5, background: "rgba(255,255,255,0.25)", overflow: "hidden" }}>
+          <div style={{ width: `${fill * 100}%`, height: "100%", borderRadius: 5, background: col }} />
+        </div>
+        <span style={{ fontFamily: "'Inter'", fontWeight: 800, fontSize: 19, letterSpacing: "0.06em", color: "#FFFFFF", background: col, borderRadius: 16, padding: "5px 12px" }}>LONGSLEEVE 0 €</span>
       </div>
     </div>
   );
