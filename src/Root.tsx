@@ -17,6 +17,7 @@ import { CB, CB_FRAMES, CutBeat } from "./bf/CutBeat";
 import { MT, MT_FRAMES, MainTikTok } from "./bf/MainTikTok";
 import { ST, ST_FRAMES, StoryTikTok } from "./bf/StoryTikTok";
 import { WA2, WA2_FRAMES, WaChannel2 } from "./bf/WaChannel2";
+import { LS, LS_FRAMES, LongsleeveTikTok } from "./bf/LongsleeveTikTok";
 import { BEAMER, SafetyBeamer } from "./card/SafetyBeamer";
 import { BEAMER_CLEAN, SafetyBeamerClean } from "./card/SafetyBeamerClean";
 import { COMIC_CARD, COMIC_SLIDES, SafetyComicCard, SafetyComicSlides } from "./card/SafetyComic";
@@ -84,6 +85,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="GtaBox" component={GtaBox} defaultProps={{}} fps={GFPS} width={1080} height={1920} durationInFrames={GTA_FRAMES} />
     {/* WhatsApp-Kanal-Aufruf mit Passwort speichern */}
     <Composition id="WaChannel" component={WaChannel} defaultProps={{}} fps={WA.fps} width={WA.width} height={WA.height} durationInFrames={WA_FRAMES} />
+    {/* Longsleeve-Video: 0 €, 550 GSM, 69 €, Details, Instagram */}
+    <Composition id="LongsleeveTikTok" component={LongsleeveTikTok} defaultProps={{}} fps={LS.fps} width={LS.width} height={LS.height} durationInFrames={LS_FRAMES} />
     {/* WhatsApp-Kanal V2: Satz ungeschnitten, Kanal 1.761 Follower, echte Kommentare, Passwort-Mitteilung */}
     <Composition id="WaChannel2" component={WaChannel2} defaultProps={{}} fps={WA2.fps} width={WA2.width} height={WA2.height} durationInFrames={WA2_FRAMES} />
     {/* Story-TikTok: Freundin fremdgegangen (iMessage-Beweis, Wendung Trackie) */}
