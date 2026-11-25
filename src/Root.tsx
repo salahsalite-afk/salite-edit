@@ -19,6 +19,7 @@ import { ST, ST_FRAMES, StoryTikTok } from "./bf/StoryTikTok";
 import { WA2, WA2_FRAMES, WaChannel2 } from "./bf/WaChannel2";
 import { LS, LS_FRAMES, LongsleeveTikTok } from "./bf/LongsleeveTikTok";
 import { IGS, IGS_FRAMES, IgStoryShoot } from "./bf/IgStoryShoot";
+import { LS2, LS2_FRAMES, LongsleeveTikTok2 } from "./bf/LongsleeveTikTok2";
 import { BEAMER, SafetyBeamer } from "./card/SafetyBeamer";
 import { BEAMER_CLEAN, SafetyBeamerClean } from "./card/SafetyBeamerClean";
 import { COMIC_CARD, COMIC_SLIDES, SafetyComicCard, SafetyComicSlides } from "./card/SafetyComic";
@@ -86,6 +87,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="GtaBox" component={GtaBox} defaultProps={{}} fps={GFPS} width={1080} height={1920} durationInFrames={GTA_FRAMES} />
     {/* WhatsApp-Kanal-Aufruf mit Passwort speichern */}
     <Composition id="WaChannel" component={WaChannel} defaultProps={{}} fps={WA.fps} width={WA.width} height={WA.height} durationInFrames={WA_FRAMES} />
+    {/* Longsleeve-Video 2: Hook for free, Ibos Kommentar, Ablauf, Preise, Kassen-Sound */}
+    <Composition id="LongsleeveTikTok2" component={LongsleeveTikTok2} defaultProps={{}} fps={LS2.fps} width={LS2.width} height={LS2.height} durationInFrames={LS2_FRAMES} />
     {/* Instagram-Story vom Shooting: Preis, keine Winterjacke, Passwörter laufen aus, Link */}
     <Composition id="IgStoryShoot" component={IgStoryShoot} defaultProps={{}} fps={IGS.fps} width={IGS.width} height={IGS.height} durationInFrames={IGS_FRAMES} />
     {/* Longsleeve-Video: 0 €, 550 GSM, 69 €, Details, Instagram */}
