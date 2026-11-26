@@ -1,10 +1,13 @@
-"""Ton für das Model-Casting-Video (src/bf/ModelsTikTok.tsx): Originalstimme unverändert, leise Effekte dazu.
+"""Ton für das Model-Casting-Video V2 (src/bf/ModelsTikTok.tsx): Originalstimme unverändert, leise Effekte dazu.
 
 python scripts/models_mix.py <original.mov> <snd_dir> <out.wav>
-Stimme ohne EQ, Rauschminderung oder Lautheitsanpassung; der eigene Swish nach dem Intro ist schon im Original.
-Effekte ruhig und leise (Kunde: angenehm, nicht plakativ), einzeln gepegelt: Spitze 50 ms RMS gegen p70 der Stimme
-in 400 ms Fenstern. Höchstens ein Effekt pro Sekunde, Ausnahme Tastatur beim Kommentar.
+- Stimme ohne EQ, Rauschminderung oder Lautheitsanpassung; nur die Pausen an den Schnitten fallen heraus
+  (Abschnitte aus src/bf/models_edl.json, 8 ms Blenden gegen Knacken). Der eigene Swish nach dem Intro bleibt.
+- Zu jeder Einblendung ein leiser Klang (Kunde), einzeln gepegelt: Spitze 50 ms RMS gegen p70 der Stimme
+  in 400 ms Fenstern. Glocke beim Folgen deutlicher (minus 15 dB), alles andere minus 20 bis 32 dB.
 """
+import json
+import os
 import subprocess
 import sys
 
@@ -13,16 +16,38 @@ import soundfile as sf
 
 src, snd, out = sys.argv[1:4]
 SR = 48000
-TOTAL = 29.2
+E = json.load(open(os.path.join(os.path.dirname(__file__), "..", "src", "bf", "models_edl.json")))
+FPS = E["fps"]
+SEG = [(a / FPS, b / FPS) for a, b in E["seg"]]
+STARTS = [0.0]
+for a, b in SEG[:-1]:
+    STARTS.append(STARTS[-1] + b - a)
+TOTAL = STARTS[-1] + SEG[-1][1] - SEG[-1][0]
 N = int(round(TOTAL * SR))
+
+
+def o(s):
+    for (a, b), st in zip(SEG, STARTS):
+        if s < b:
+            return st + max(0.0, s - a)
+    return TOTAL
+
+
 raw = "/dev/shm/rtmp/_mod_voice.wav"
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", src, "-vn", "-ar", str(SR), "-c:a", "pcm_f32le", raw], check=True)
 v, _ = sf.read(raw)
 if v.ndim == 1:
     v = np.stack([v, v], 1)
 mix = np.zeros((N, 2))
-m = min(len(v), N)
-mix[:m] = v[:m]
+k = int(0.008 * SR)
+for (a, b), st in zip(SEG, STARTS):
+    x = v[int(round(a * SR)) : int(round(b * SR))].copy()
+    if a > 0:
+        x[:k] *= np.linspace(0, 1, k)[:, None]
+    x[-k:] *= np.linspace(1, 0, k)[:, None]
+    i = int(round(st * SR))
+    n = min(len(x), N - i)
+    mix[i : i + n] += x[:n]
 
 
 def mov_rms(x, k):
@@ -32,26 +57,33 @@ def mov_rms(x, k):
 
 vr = mov_rms(v.mean(1), int(0.4 * SR))
 ref = 20 * np.log10(np.percentile(vr[vr > 1e-4], 70))
+# (Quellzeit, Klang, Ziel in dB relativ zur Stimme)
 FX = [
-    (3.30, "pop", -29),          # Model Casting
-    (5.62, "whoosh_soft", -27),  # Menschenmenge
-    (11.25, "whoosh_soft", -27), # Klappe
-    (12.60, "pop", -30),         # Shooting-Takes
-    (14.85, "whoosh_soft", -27), # Runway
-    (17.36, "notify", -26),      # Plus weg, Haken
-    (20.30, "pop", -30),         # Instagram
-    (21.92, "click", -25),       # Nachricht
-    (24.30, "whoosh_soft", -28), # Shooting
-    (26.42, "notify", -27),      # Plus weg
+    (0.84, "afbeep", -30), (1.08, "shutter", -20),            # Sucher: Fokus, Auslöser auf "Models"
+    (2.0, "pop", -32),                                        # Slot erscheint
+    (3.30, "pop", -28),                                       # Model Casting
+    (5.62, "whoosh_soft", -25), (5.72, "paper", -26),         # Abzug Menschenmenge
+    (11.40, "clack", -24),                                    # Abzug Filmklappe
+    (12.70, "paper", -26), (13.42, "paper", -27),             # Shooting-Abzüge legen sich darüber
+    (14.85, "whoosh_soft", -25), (16.0, "paper", -26),        # Runway, zweiter Abzug
+    (16.95, "pop", -31), (17.33, "click", -28), (17.36, "ding", -15),  # Folgen: Plus weg, Glocke
+    (17.83, "click", -24),                                    # Speichern
+    (18.62, "pop", -30),                                      # Kommentarleiste
+    (20.30, "pop", -27), (21.89, "click", -23),               # Instagram, Nachricht
+    (24.30, "whoosh_soft", -26), (24.40, "paper", -27),       # Abzug Shooting
+    (25.95, "pop", -31), (26.39, "click", -28), (26.42, "ding", -15),  # Plus weg, Glocke
+    (28.40, "afbeep", -30), (28.68, "shutter", -20), (28.86, "chime", -22),  # Auslöser, Slot geschafft
 ]
-# Kommentar "Ich hab Bock": ein leiser Anschlag pro Buchstabe (wie im Bild getippt)
-TEXT, TA, TE, SENT = "Ich hab Bock", 19.42, 19.9, 19.95
+TEXT, TA, TE, SENT = "Ich hab Bock", 19.4, 19.76, 19.8
 for i, ch in enumerate(TEXT):
     if ch != " ":
         FX.append((TA + (TE - TA) * i / len(TEXT), f"keyboard_tap{1 + i % 3}", -31))
-FX.append((SENT, "click", -27))
+FX.append((SENT - 0.03, "click", -26))
+events = [(o(s), n, g) for s, n, g in FX]
+# Swish an jedem Schnitt (Ausgabezeit)
+events += [(st - 0.08, "whoosh_soft", -25) for st in STARTS[1:]]
 cache = {}
-for at, name, target in FX:
+for at, name, target in events:
     if name not in cache:
         x, r = sf.read(f"{snd}/{name}.wav")
         assert r == SR, (name, r)
@@ -59,11 +91,11 @@ for at, name, target in FX:
         pk = 20 * np.log10(mov_rms(x.mean(1), min(len(x), int(0.05 * SR))).max() + 1e-12)
         cache[name] = (x, pk)
     x, pk = cache[name]
-    i = int(at * SR)
+    i = int(round(at * SR))
     n = min(len(x), N - i)
     mix[i : i + n] += x[:n] * 10 ** ((ref + target - pk) / 20)
 peak = np.abs(mix).max()
 if peak > 0.99:
     mix *= 0.99 / peak
 sf.write(out, mix.astype(np.float32), SR)
-print("Stimme p70", round(ref, 1), "dBFS, Spitze", round(float(peak), 3), "Effekte", len(FX))
+print("Länge", round(TOTAL, 3), "s, Stimme p70", round(ref, 1), "dBFS, Spitze", round(float(peak), 3), "Effekte", len(events))

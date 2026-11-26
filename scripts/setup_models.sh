@@ -16,6 +16,7 @@ mkdir -p $D/src $D/img $D/snd /dev/shm/rtmp /dev/shm/prev
 [ -s $D/img/crowd.jpg ] || cp $U/10ae6042-image.jpg $D/img/crowd.jpg
 # leise Klänge: Pop selbst gebaut, Rest aus sfx/
 [ -s $D/snd/pop.wav ] || { .venv/bin/python scripts/cut_sfx.py /dev/shm/rtmp/csfx > /dev/null; cp /dev/shm/rtmp/csfx/pop.wav $D/snd/pop.wav; }
+.venv/bin/python scripts/models_sfx.py $D/snd > /dev/null
 cp sfx/whoosh_soft.wav sfx/notify.wav sfx/click.wav sfx/keyboard_tap1.wav sfx/keyboard_tap2.wav sfx/keyboard_tap3.wav $D/snd/
 mkdir -p public_v3
 ln -sfn ../public/fonts public_v3/fonts

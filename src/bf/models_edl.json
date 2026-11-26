@@ -1,0 +1,5 @@
+{
+  "fps": 60,
+  "note": "Quell-Frames (60 fps Proxy), Pausen an den Schnitten herausgenommen; gleiche Liste in scripts/models_mix.py",
+  "seg": [[0, 479], [493, 660], [671, 839], [848, 1190], [1199, 1428], [1445, 1752]]
+}
