@@ -6,6 +6,7 @@ python scripts/models_mix.py <original.mov> <snd_dir> <out.wav>
 - Zu jeder Einblendung ein leiser Klang (Kunde), einzeln gepegelt: Spitze 50 ms RMS gegen p70 der Stimme
   in 400 ms Fenstern. Glocke beim Folgen deutlicher (minus 15 dB), alles andere minus 23 bis 31 dB.
 - V3: kein Swish-Klang an den Schnitten, kein Slot-Klang (Kunde).
+- V4: keine Klänge mehr für Sucher, Model-Casting-Label und Instagram-Karte (Elemente entfernt).
 """
 import json
 import os
@@ -60,8 +61,6 @@ vr = mov_rms(v.mean(1), int(0.4 * SR))
 ref = 20 * np.log10(np.percentile(vr[vr > 1e-4], 70))
 # (Quellzeit, Klang, Ziel in dB relativ zur Stimme)
 FX = [
-    (0.84, "afbeep", -30), (1.08, "shutter", -23),            # Sucher: Fokus, Auslöser auf "Models"
-    (3.30, "pop", -28),                                       # Model Casting
     (5.62, "whoosh_soft", -25), (5.72, "paper", -26),         # Abzug Menschenmenge
     (11.40, "clack", -24),                                    # Abzug Filmklappe
     (12.70, "paper", -26), (13.42, "paper", -27),             # Shooting-Abzüge legen sich darüber
@@ -69,10 +68,8 @@ FX = [
     (16.95, "pop", -31), (17.33, "click", -28), (17.36, "ding", -15),  # Folgen: Plus weg, Glocke
     (17.83, "click", -24),                                    # Speichern
     (18.62, "pop", -30),                                      # Kommentarleiste
-    (20.50, "pop", -27), (21.89, "click", -23),               # Instagram, Nachricht
     (24.30, "whoosh_soft", -26), (24.40, "paper", -27),       # Abzug Shooting
     (25.95, "pop", -31), (26.39, "click", -28), (26.42, "ding", -15),  # Plus weg, Glocke
-    (28.40, "afbeep", -30), (28.68, "shutter", -23),          # Sucher am Ende
 ]
 TEXT, TA, TE, SENT = "Ich hab Bock", 19.4, 19.76, 19.8
 for i, ch in enumerate(TEXT):

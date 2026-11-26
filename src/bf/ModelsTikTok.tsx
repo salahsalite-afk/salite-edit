@@ -7,7 +7,8 @@ import EDL from "./models_edl.json";
 // V2 (Kunde): Pausen an den Schnitten raus, Helligkeit der Einstellungen angeglichen, Bilder als Fotoabzüge, die sich stapeln,
 // zu jeder Einblendung ein leiser Klang, Glocke beim Folgen, Kamera-Sucher am Anfang und am Ende.
 // V3 (Kunde): kein Slot, kein Timecode, kein Blitz, kein Swish an den Schnitten. Pop-up-Foto größer, Kommentar im TikTok-Look.
-// Stimme unverändert (scripts/models_mix.py).
+// V4 (Kunde): ohne Model-Casting-Label, ohne Sucher (Ecken, REC), ohne Untertitel und ohne Instagram-Karte
+// (baut der Kunde selbst). Stimme unverändert (scripts/models_mix.py).
 export const MOD = { fps: 60, width: 1080, height: 1920 };
 const SEG = EDL.seg as [number, number][];
 const OUT0: number[] = [];
@@ -33,31 +34,7 @@ const ease = (t: number, a: number, len = 0.28, e = OUT) => interpolate(t, [a, a
 const inOut = (t: number, a: number, e: number, len = 0.28) => ease(t, a, len) * (1 - interpolate(t, [e - 0.16, e], [0, 1], clamp));
 const TT_RED = "#FE2C55";
 
-// ---------- Untertitel (iPhone-Stil, Quellzeit) ----------
-const CAP_SRC: [string, number][] = [
-  ["ICH BRAUCHE MAL", 0.0], ["WIEDER MODELS", 0.74], ["JA IHR HÖRT", 1.9], ["RICHTIG", 2.58], ["JA IHR HÖRT", 3.3], ["WIRKLICH RICHTIG", 3.86],
-  ["WEIL IHR HABT", 4.72], ["DIE CHANCE", 5.08], ["MIT DER ZUKÜNFTIGEN", 5.56], ["GRÖSSTEN", 6.26], ["STREETWEAR-BRAND", 6.62], ["ZUSAMMENZUARBEITEN", 7.12],
-  ["WIE IHR WISST", 8.32], ["BAUEN WIR GERADE", 8.9], ["UNSER KOMPLETT", 9.26], ["NEUES WAREHOUSE UM", 9.96],
-  ["DAFÜR SUCHEN WIR", 11.22], ["AUCH FESTE MODELS", 11.88], ["MIT DENEN", 12.58], ["WIR RUND UM", 12.8], ["DIE UHR ARBEITEN", 13.24], ["KÖNNEN", 13.72],
-  ["ALSO", 14.32], ["WER BOCK HAT", 14.88], ["IN DEN FRESHESTEN", 15.28], ["KLAMOTTEN ZU SHOOTEN", 16.02],
-  ["MACHT JETZT", 16.94], ["DAS PLUS WEG", 17.16], ["SPEICHERT DAS VIDEO", 17.86], ["UND KOMMENTIERT REIN", 18.54], ["ICH HAB BOCK", 19.48],
-  ["UND DANN SCHREIBT", 20.12], ["IHR AUF INSTA", 20.58], ["EINMAL EINE", 21.28], ["KLEINE BEWERBUNG DURCH", 21.68],
-  ["WIR CHECKEN", 22.64], ["ALLE AB", 23.28], ["WIR FREUEN UNS", 24.14], ["MIT EUCH", 24.78], ["ZUSAMMENZUARBEITEN", 25.04],
-  ["MACHT DAS", 26.1], ["PLUS WEG", 26.42], ["SUPPORT YOUNG BOYS", 27.12], ["WITH BIG DREAMS", 28.02],
-];
-const ENDS: Record<number, number> = { 19.48: 19.84, 2.58: 3.12, 7.12: 7.92, 9.96: 11.0, 13.72: 13.98, 16.02: 16.78, 23.28: 23.8, 25.04: 25.86, 26.42: 26.94 };
-const CAPS = CAP_SRC.map(([text, a], i) => {
-  const next = CAP_SRC[i + 1];
-  return { a, e: ENDS[a] ?? (next ? Math.min(next[1], a + 1.4) : 29.15), text };
-});
 export const COMMENT = { text: "Ich hab Bock", a: 18.62, typeA: 19.4, typeE: 19.76, sent: 19.8, e: 20.42 };
-const Captions: React.FC<{ s: number }> = ({ s }) => {
-  if (s >= COMMENT.typeA - 0.05 && s < 19.99) return null; // "Ich hab Bock" steht im Kommentar
-  const c = CAPS.find((x) => s >= x.a && s < x.e);
-  if (!c) return null;
-  return <div style={{ position: "absolute", left: 60, right: 140, top: 1418, textAlign: "center", fontFamily: "'Inter'", fontWeight: 600, fontSize: 54, color: "#FFFFFF", textShadow: "0 2px 10px rgba(0,0,0,0.5)", whiteSpace: "nowrap" }}>{c.text}</div>;
-};
-
 // ---------- Hauptbild: Abschnitte ohne Pausen, Helligkeit pro Einstellung angeglichen ----------
 const shotGain = (s: number) => (s < 8.117 ? 1.06 : s < 11.083 ? 0.98 : s < 14.15 ? 1.0 : s < 20.017 ? 0.985 : s < 24.033 ? 1.0 : 1.08);
 const GRADE = "contrast(1.05) saturate(1.04)";
@@ -136,52 +113,6 @@ const Prints: React.FC<{ s: number; fr: number }> = ({ s, fr }) => (
   </>
 );
 
-// ---------- Kamera-Sucher: Anfang ("Models") und Ende ("Big Dreams"), Ecken stellen scharf ----------
-const SHUTTER = [1.08, 28.68];
-const Viewfinder: React.FC<{ s: number; t: number }> = ({ s, t }) => {
-  const hook = s < 1.66;
-  const end = s >= 27.12;
-  if (!hook && !end) return null;
-  const sh = hook ? SHUTTER[0] : SHUTTER[1];
-  const vis = hook ? 1 - interpolate(s, [1.46, 1.64], [0, 1], clamp) : ease(s, 27.12, 0.35);
-  const focus = interpolate(s, [sh - 0.3, sh - 0.06], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) }) * (1 - interpolate(s, [sh, sh + 0.3], [0, 1], clamp));
-  const inset = 26 * focus;
-  const L = 80 + inset, R = 1000 - inset, T = 300 + inset, B = 1290 - inset, LEN = 70;
-  const rec = Math.floor(t * 2) % 2 === 0;
-  const corner = (x: number, y: number, dx: number, dy: number) => <path d={`M ${x} ${y + dy * LEN} L ${x} ${y} L ${x + dx * LEN} ${y}`} stroke="#FFFFFF" strokeWidth={5} fill="none" strokeLinecap="round" />;
-  return (
-    <>
-      <AbsoluteFill style={{ opacity: vis }}>
-        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0, filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" }}>
-          {corner(L, T, 1, 1)}
-          {corner(R, T, -1, 1)}
-          {corner(L, B, 1, -1)}
-          {corner(R, B, -1, -1)}
-        </svg>
-        <div style={{ position: "absolute", left: 96, top: 236, display: "flex", alignItems: "center", gap: 12, fontFamily: "'Inter'", fontWeight: 700, fontSize: 26, letterSpacing: "0.14em", color: "#FFFFFF", textShadow: "0 2px 6px rgba(0,0,0,0.5)" }}>
-          <span style={{ width: 18, height: 18, borderRadius: 9, background: TT_RED, opacity: rec ? 1 : 0.25 }} />
-          REC
-        </div>
-      </AbsoluteFill>
-    </>
-  );
-};
-
-// ---------- kleines Label beim zweiten "Ja, ihr hört richtig" ----------
-const Casting: React.FC<{ s: number }> = ({ s }) => {
-  if (s < 3.3 || s >= 5.58) return null;
-  const p = inOut(s, 3.3, 5.58);
-  const dot = Math.sin((s - 3.3) * 6) > 0 ? 1 : 0.35;
-  return (
-    <div style={{ position: "absolute", left: 0, right: 80, top: 1240, display: "flex", justifyContent: "center", opacity: p, transform: `translateY(${(1 - p) * 14}px)` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(14,14,14,0.72)", borderRadius: 22, padding: "10px 22px" }}>
-        <span style={{ width: 14, height: 14, borderRadius: 7, background: TT_RED, opacity: dot }} />
-        <span style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 24, letterSpacing: "0.18em", color: "#FFFFFF" }}>MODEL CASTING</span>
-      </div>
-    </div>
-  );
-};
-
 // ---------- FOLGEN (oben links) und Speichern darunter, Fingertipp sichtbar ----------
 const Follow: React.FC<{ s: number; a: number; check: number; e: number; save?: number }> = ({ s, a, check, e, save }) => {
   if (s < a || s >= e) return null;
@@ -216,7 +147,7 @@ const Follow: React.FC<{ s: number; a: number; check: number; e: number; save?: 
   );
 };
 const TAPS: [number, number, number][] = [
-  [17.33, 125, 390], [17.83, 125, 478], [COMMENT.sent - 0.03, 70 + 860 - 20 - 28, 1310 - 47], [21.89, 772, 1208], [26.39, 125, 390],
+  [17.33, 125, 390], [17.83, 125, 478], [COMMENT.sent - 0.03, 70 + 860 - 20 - 28, 1310 - 47], [26.39, 125, 390],
 ];
 const Taps: React.FC<{ s: number }> = ({ s }) => (
   <>
@@ -283,35 +214,9 @@ const CommentBar: React.FC<{ s: number }> = ({ s }) => {
   );
 };
 
-// ---------- Instagram: Bewerbung per Nachricht an @saliteclothing ----------
-const IG_TAP = 21.92;
-const Insta: React.FC<{ s: number }> = ({ s }) => {
-  if (s < 20.5 || s >= 22.75) return null;
-  const p = inOut(s, 20.5, 22.75);
-  const tap = interpolate(s, [IG_TAP - 0.04, IG_TAP, IG_TAP + 0.08], [1, 0.9, 1], clamp);
-  const tapped = s >= IG_TAP;
-  return (
-    <div style={{ position: "absolute", left: 120, width: 760, top: 1150, opacity: p, transform: `translateY(${(1 - p) * 20}px)` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 18, background: "#FFFFFF", borderRadius: 28, padding: 16, boxShadow: "0 14px 40px rgba(0,0,0,0.35)" }}>
-        <div style={{ width: 84, height: 84, borderRadius: 42, padding: 4, background: "linear-gradient(45deg, #FEDA75, #FA7E1E 25%, #D62976 55%, #962FBF 80%, #4F5BD5)", boxSizing: "border-box", flexShrink: 0 }}>
-          <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "#1E1712", border: "3px solid #FFF", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <img src={staticFile("brand/salite-s-light.svg")} style={{ height: 38 }} />
-          </div>
-        </div>
-        <div style={{ flex: 1, fontFamily: "'Inter'", lineHeight: 1.2 }}>
-          <div style={{ fontWeight: 700, fontSize: 32, color: "#111" }}>saliteclothing</div>
-          <div style={{ fontWeight: 600, fontSize: 21, color: "#6B6B70" }}>Instagram</div>
-        </div>
-        <div style={{ width: 180, textAlign: "center", background: tapped ? "#EFEFEF" : "#0095F6", color: tapped ? "#111" : "#FFF", borderRadius: 14, padding: "14px 0", fontFamily: "'Inter'", fontWeight: 700, fontSize: 26, transform: `scale(${tap})` }}>Nachricht</div>
-      </div>
-    </div>
-  );
-};
-
 export const ModelsTikTok: React.FC = () => {
   loadFonts();
   const fr = useCurrentFrame();
-  const t = fr / MOD.fps;
   const s = srcSec(fr);
   const b = blurAt(s);
   const gain = shotGain(s);
@@ -325,15 +230,11 @@ export const ModelsTikTok: React.FC = () => {
           <MainVideo />
         </div>
       )}
-      <Viewfinder s={s} t={t} />
-      <Casting s={s} />
       <Prints s={s} fr={fr} />
       <Follow s={s} a={16.95} check={17.36} save={17.86} e={19.83} />
       <Follow s={s} a={25.95} check={26.42} e={27.08} />
       <CommentBar s={s} />
-      <Insta s={s} />
       <Taps s={s} />
-      <Captions s={s} />
     </AbsoluteFill>
   );
 };
