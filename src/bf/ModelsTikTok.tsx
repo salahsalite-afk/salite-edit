@@ -4,15 +4,15 @@ import { loadFonts } from "../story/LineupPan";
 import EDL from "./models_edl.json";
 
 // Model-Casting V2 (28,2 s): "Ich brauche mal wieder Models". Ohne Zooms auf den Sprecher, eigener Swish nach dem Intro bleibt.
-// V2 (Kunde): Schnitte dynamisch (Pausen raus, kurzer Swish mit Bewegungsunschärfe, Helligkeit der Einstellungen angeglichen),
-// Bilder als Fotoabzüge, die sich stapeln, zu jeder Einblendung ein leiser Klang, Slot "bis zum Ende, Model werden",
-// Glocke beim Folgen, Kamera-Sucher mit Auslöser am Anfang und am Ende. Stimme unverändert (scripts/models_mix.py).
+// V2 (Kunde): Pausen an den Schnitten raus, Helligkeit der Einstellungen angeglichen, Bilder als Fotoabzüge, die sich stapeln,
+// zu jeder Einblendung ein leiser Klang, Glocke beim Folgen, Kamera-Sucher am Anfang und am Ende.
+// V3 (Kunde): kein Slot, kein Timecode, kein Blitz, kein Swish an den Schnitten. Pop-up-Foto größer, Kommentar im TikTok-Look.
+// Stimme unverändert (scripts/models_mix.py).
 export const MOD = { fps: 60, width: 1080, height: 1920 };
 const SEG = EDL.seg as [number, number][];
 const OUT0: number[] = [];
 SEG.reduce((acc, [a, b]) => (OUT0.push(acc), acc + b - a), 0);
 export const MOD_FRAMES = OUT0[OUT0.length - 1] + SEG[SEG.length - 1][1] - SEG[SEG.length - 1][0];
-const BOUNDS = OUT0.slice(1).map((x) => x / MOD.fps);
 const segOf = (fr: number) => {
   for (let i = SEG.length - 1; i >= 0; i--) if (fr >= OUT0[i]) return i;
   return 0;
@@ -32,7 +32,6 @@ const OUT = Easing.out(Easing.exp);
 const ease = (t: number, a: number, len = 0.28, e = OUT) => interpolate(t, [a, a + len], [0, 1], { ...clamp, easing: e });
 const inOut = (t: number, a: number, e: number, len = 0.28) => ease(t, a, len) * (1 - interpolate(t, [e - 0.16, e], [0, 1], clamp));
 const TT_RED = "#FE2C55";
-const RED = "#E3262B";
 
 // ---------- Untertitel (iPhone-Stil, Quellzeit) ----------
 const CAP_SRC: [string, number][] = [
@@ -46,14 +45,14 @@ const CAP_SRC: [string, number][] = [
   ["WIR CHECKEN", 22.64], ["ALLE AB", 23.28], ["WIR FREUEN UNS", 24.14], ["MIT EUCH", 24.78], ["ZUSAMMENZUARBEITEN", 25.04],
   ["MACHT DAS", 26.1], ["PLUS WEG", 26.42], ["SUPPORT YOUNG BOYS", 27.12], ["WITH BIG DREAMS", 28.02],
 ];
-const ENDS: Record<number, number> = { 2.58: 3.12, 7.12: 7.92, 9.96: 11.0, 13.72: 13.98, 16.02: 16.78, 23.28: 23.8, 25.04: 25.86, 26.42: 26.94 };
+const ENDS: Record<number, number> = { 19.48: 19.84, 2.58: 3.12, 7.12: 7.92, 9.96: 11.0, 13.72: 13.98, 16.02: 16.78, 23.28: 23.8, 25.04: 25.86, 26.42: 26.94 };
 const CAPS = CAP_SRC.map(([text, a], i) => {
   const next = CAP_SRC[i + 1];
   return { a, e: ENDS[a] ?? (next ? Math.min(next[1], a + 1.4) : 29.15), text };
 });
-export const COMMENT = { text: "Ich hab Bock", a: 18.62, typeA: 19.4, typeE: 19.76, sent: 19.8, e: 19.84 };
+export const COMMENT = { text: "Ich hab Bock", a: 18.62, typeA: 19.4, typeE: 19.76, sent: 19.8, e: 20.42 };
 const Captions: React.FC<{ s: number }> = ({ s }) => {
-  if (s >= COMMENT.typeA - 0.05 && s < COMMENT.e) return null; // "Ich hab Bock" steht im Kommentar
+  if (s >= COMMENT.typeA - 0.05 && s < 19.99) return null; // "Ich hab Bock" steht im Kommentar
   const c = CAPS.find((x) => s >= x.a && s < x.e);
   if (!c) return null;
   return <div style={{ position: "absolute", left: 60, right: 140, top: 1418, textAlign: "center", fontFamily: "'Inter'", fontWeight: 600, fontSize: 54, color: "#FFFFFF", textShadow: "0 2px 10px rgba(0,0,0,0.5)", whiteSpace: "nowrap" }}>{c.text}</div>;
@@ -71,27 +70,12 @@ const MainVideo: React.FC = () => (
     ))}
   </>
 );
-// kurzer Swish an jedem Schnitt: raus nach links, rein von rechts, waagerechte Bewegungsunschärfe
-const whip = (t: number) => {
-  for (const c of BOUNDS) {
-    if (t >= c - 0.1 && t < c) {
-      const w = (t - (c - 0.1)) / 0.1;
-      return { w: w * w * (3 - 2 * w), dir: -1 };
-    }
-    if (t >= c && t < c + 0.14) {
-      const w = 1 - (t - c) / 0.14;
-      return { w: w * w * (3 - 2 * w), dir: 1 };
-    }
-  }
-  return { w: 0, dir: 0 };
-};
-
 // ---------- Fotoabzüge: fallen mit 3D-Schwung auf den Stapel, leicht gedreht, Papierrand ----------
 const CLIP_LEN: Record<string, number> = { "takeA.mp4": 1.918, "takeB.mp4": 6.02, "takeC.mp4": 3.0, "runway.mp4": 18.0 };
-type Print = { a: number; w: number; h: number; cx: number; cy: number; rot: number; img?: string; pos?: string; file?: string; from?: number };
+type Print = { a: number; w: number; h: number; cx: number; cy: number; rot: number; img?: string; pos?: string; file?: string; from?: number; label?: string };
 type Group = { a: number; e: number; prints: Print[] };
 const GROUPS: Group[] = [
-  { a: 5.62, e: 7.95, prints: [{ a: 5.62, w: 860, h: 740, cx: 540, cy: 900, rot: -2.5, img: "crowd.jpg", pos: "50% 60%" }] },
+  { a: 5.62, e: 7.95, prints: [{ a: 5.62, w: 980, h: 880, cx: 540, cy: 920, rot: -2, img: "crowd.jpg", pos: "50% 58%", label: "POP-UP" }] },
   {
     a: 11.3,
     e: 13.96,
@@ -137,8 +121,11 @@ const Prints: React.FC<{ s: number; fr: number }> = ({ s, fr }) => (
             const swing = p.rot >= 0 ? 8 : -8;
             return (
               <div key={i} style={{ position: "absolute", left: p.cx - p.w / 2, top: p.cy - p.h / 2, width: p.w, height: p.h, padding: 14, boxSizing: "border-box", background: "#F7F3EC", borderRadius: 8, boxShadow: "0 28px 60px rgba(20,12,6,0.45), 0 4px 12px rgba(20,12,6,0.25)", opacity: Math.min(1, k * 3), transform: `perspective(1600px) translateY(${(1 - k) * 300}px) rotateX(${(1 - k) * 32}deg) rotate(${p.rot + (1 - k) * swing}deg) scale(${0.9 + 0.1 * k})` }}>
-                <div style={{ width: "100%", height: "100%", borderRadius: 3, overflow: "hidden", background: "#111" }}>
+                <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: 3, overflow: "hidden", background: "#111" }}>
                   <PrintMedia p={p} g={g} fr={fr} />
+                  {p.label && (
+                    <div style={{ position: "absolute", left: 18, top: 18, background: "rgba(14,14,14,0.78)", color: "#FFFFFF", borderRadius: 12, padding: "8px 16px", fontFamily: "'Inter'", fontWeight: 700, fontSize: 24, letterSpacing: "0.2em", opacity: ease(s, p.a + 0.3, 0.3) }}>{p.label}</div>
+                  )}
                 </div>
               </div>
             );
@@ -149,7 +136,7 @@ const Prints: React.FC<{ s: number; fr: number }> = ({ s, fr }) => (
   </>
 );
 
-// ---------- Kamera-Sucher: Anfang ("Models", Auslöser) und Ende ("Big Dreams", Auslöser) ----------
+// ---------- Kamera-Sucher: Anfang ("Models") und Ende ("Big Dreams"), Ecken stellen scharf ----------
 const SHUTTER = [1.08, 28.68];
 const Viewfinder: React.FC<{ s: number; t: number }> = ({ s, t }) => {
   const hook = s < 1.66;
@@ -159,11 +146,7 @@ const Viewfinder: React.FC<{ s: number; t: number }> = ({ s, t }) => {
   const vis = hook ? 1 - interpolate(s, [1.46, 1.64], [0, 1], clamp) : ease(s, 27.12, 0.35);
   const focus = interpolate(s, [sh - 0.3, sh - 0.06], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) }) * (1 - interpolate(s, [sh, sh + 0.3], [0, 1], clamp));
   const inset = 26 * focus;
-  const flash = s >= sh && s < sh + 0.28 ? 0.85 * (1 - ease(s, sh, 0.28)) : 0;
   const L = 80 + inset, R = 1000 - inset, T = 300 + inset, B = 1290 - inset, LEN = 70;
-  const ff = Math.floor((t % 1) * 30);
-  const ss = Math.floor(t);
-  const tc = `00:00:${String(ss).padStart(2, "0")}:${String(ff).padStart(2, "0")}`;
   const rec = Math.floor(t * 2) % 2 === 0;
   const corner = (x: number, y: number, dx: number, dy: number) => <path d={`M ${x} ${y + dy * LEN} L ${x} ${y} L ${x + dx * LEN} ${y}`} stroke="#FFFFFF" strokeWidth={5} fill="none" strokeLinecap="round" />;
   return (
@@ -179,9 +162,7 @@ const Viewfinder: React.FC<{ s: number; t: number }> = ({ s, t }) => {
           <span style={{ width: 18, height: 18, borderRadius: 9, background: TT_RED, opacity: rec ? 1 : 0.25 }} />
           REC
         </div>
-        <div style={{ position: "absolute", right: 140, top: 236, fontFamily: "'Inter'", fontWeight: 600, fontSize: 26, letterSpacing: "0.1em", color: "#FFFFFF", textShadow: "0 2px 6px rgba(0,0,0,0.5)", fontVariantNumeric: "tabular-nums" }}>{tc}</div>
       </AbsoluteFill>
-      {flash > 0 && <AbsoluteFill style={{ background: "#FFFFFF", opacity: flash }} />}
     </>
   );
 };
@@ -196,29 +177,6 @@ const Casting: React.FC<{ s: number }> = ({ s }) => {
       <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(14,14,14,0.72)", borderRadius: 22, padding: "10px 22px" }}>
         <span style={{ width: 14, height: 14, borderRadius: 7, background: TT_RED, opacity: dot }} />
         <span style={{ fontFamily: "'Inter'", fontWeight: 700, fontSize: 24, letterSpacing: "0.18em", color: "#FFFFFF" }}>MODEL CASTING</span>
-      </div>
-    </div>
-  );
-};
-
-// ---------- Slot: bis zum Ende schauen, Model werden ----------
-const SLOT_A = 2.0;
-const SLOT_E = outFr(28.68) / MOD.fps;
-const Slot: React.FC<{ t: number }> = ({ t }) => {
-  if (t < SLOT_A) return null;
-  const p = ease(t, SLOT_A, 0.45);
-  const fill = interpolate(t, [SLOT_A, SLOT_E], [0, 1], clamp);
-  const done = t >= SLOT_E;
-  const pop = interpolate(t, [SLOT_E, SLOT_E + 0.1, SLOT_E + 0.26], [1, 1.07, 1], clamp);
-  const col = done ? "#22C55E" : RED;
-  return (
-    <div style={{ position: "absolute", top: 1334, left: 0, right: 80, display: "flex", justifyContent: "center", opacity: p, transform: `translateY(${(1 - p) * 12}px) scale(${pop})` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(12,12,12,0.6)", borderRadius: 22, padding: "7px 9px 7px 16px" }}>
-        <span style={{ fontFamily: "'Inter'", fontWeight: 800, fontSize: 18, letterSpacing: "0.14em", color: "#FFFFFF" }}>{done ? "GESCHAFFT" : "BIS ZUM ENDE"}</span>
-        <div style={{ width: 210, height: 8, borderRadius: 4, background: "rgba(255,255,255,0.22)", overflow: "hidden" }}>
-          <div style={{ width: `${fill * 100}%`, height: "100%", borderRadius: 4, background: col }} />
-        </div>
-        <span style={{ fontFamily: "'Inter'", fontWeight: 800, fontSize: 18, letterSpacing: "0.06em", color: "#FFFFFF", background: col, borderRadius: 14, padding: "5px 11px" }}>{done ? "JETZT BEWERBEN" : "MODEL WERDEN"}</span>
       </div>
     </div>
   );
@@ -258,7 +216,7 @@ const Follow: React.FC<{ s: number; a: number; check: number; e: number; save?: 
   );
 };
 const TAPS: [number, number, number][] = [
-  [17.33, 125, 390], [17.83, 125, 478], [COMMENT.sent - 0.03, 888, 1212], [21.89, 772, 1208], [26.39, 125, 390],
+  [17.33, 125, 390], [17.83, 125, 478], [COMMENT.sent - 0.03, 70 + 860 - 20 - 28, 1310 - 47], [21.89, 772, 1208], [26.39, 125, 390],
 ];
 const Taps: React.FC<{ s: number }> = ({ s }) => (
   <>
@@ -276,23 +234,49 @@ const Taps: React.FC<{ s: number }> = ({ s }) => (
   </>
 );
 
-// ---------- KOMMENTAR: schlichte Kommentarleiste, "Ich hab Bock" wird zur Stimme getippt ----------
+// ---------- KOMMENTAR im TikTok-Look: Kommentar-Fenster, Eingabe mit @ und Emoji, roter Senden-Knopf, danach erscheint der Kommentar ----------
+const CM = { left: 70, width: 860, bottom: 1310 };
 const CommentBar: React.FC<{ s: number }> = ({ s }) => {
   if (s < COMMENT.a || s >= COMMENT.e) return null;
-  const p = ease(s, COMMENT.a, 0.3);
+  const p = inOut(s, COMMENT.a, COMMENT.e, 0.3);
   const n = Math.max(0, Math.min(COMMENT.text.length, Math.floor(((s - COMMENT.typeA) / (COMMENT.typeE - COMMENT.typeA)) * COMMENT.text.length) + (s >= COMMENT.typeA ? 1 : 0)));
   const sent = s >= COMMENT.sent;
+  const post = ease(s, COMMENT.sent, 0.3);
   const press = interpolate(s, [COMMENT.sent - 0.04, COMMENT.sent, COMMENT.sent + 0.06], [1, 0.86, 1], clamp);
+  const typing = n > 0 && !sent;
   return (
-    <div style={{ position: "absolute", left: 70, right: 150, top: 1170, opacity: p, transform: `translateY(${(1 - p) * 24}px)` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 16, background: "#FFFFFF", borderRadius: 44, padding: "12px 12px 12px 14px", boxShadow: "0 14px 40px rgba(0,0,0,0.35)" }}>
-        <div style={{ width: 60, height: 60, borderRadius: 30, background: "#D9D9DE", flexShrink: 0 }} />
-        <div style={{ flex: 1, fontFamily: "'Inter'", fontWeight: 600, fontSize: 32, color: n === 0 ? "#8A8B91" : "#161823", whiteSpace: "nowrap" }}>
-          {n === 0 ? "Kommentar hinzufügen …" : COMMENT.text.slice(0, n)}
-          {n > 0 && !sent && <span style={{ color: TT_RED }}>|</span>}
+    <div style={{ position: "absolute", left: CM.left, width: CM.width, top: CM.bottom, opacity: p, transform: `translateY(calc(-100% + ${(1 - p) * 30}px))` }}>
+      <div style={{ background: "#FFFFFF", borderRadius: 24, boxShadow: "0 16px 44px rgba(0,0,0,0.35)", overflow: "hidden" }}>
+        <div style={{ position: "relative", height: 62, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter'", fontWeight: 700, fontSize: 24, color: "#161823" }}>
+          Kommentare
+          <svg width={26} height={26} viewBox="0 0 20 20" style={{ position: "absolute", right: 24 }}><path d="M5 5 L15 15 M15 5 L5 15" stroke="#161823" strokeWidth={2.2} strokeLinecap="round" /></svg>
         </div>
-        <div style={{ width: 60, height: 60, borderRadius: 30, background: n > 0 ? TT_RED : "#E3E3E5", display: "flex", alignItems: "center", justifyContent: "center", transform: `scale(${press})` }}>
-          <svg width={26} height={26} viewBox="0 0 20 20"><path d="M10 16 V4 M4.5 9.5 L10 4 L15.5 9.5" stroke="#FFF" strokeWidth={2.6} fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <div style={{ height: 112 * post, overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: "8px 24px 0", opacity: post }}>
+            <div style={{ width: 56, height: 56, borderRadius: 28, background: "#D9D9DE", flexShrink: 0 }} />
+            <div style={{ flex: 1, fontFamily: "'Inter'" }}>
+              <div style={{ fontWeight: 600, fontSize: 21, color: "#8A8B91" }}>du</div>
+              <div style={{ fontWeight: 500, fontSize: 28, color: "#161823", marginTop: 2 }}>{COMMENT.text}</div>
+              <div style={{ fontWeight: 600, fontSize: 19, color: "#8A8B91", marginTop: 4 }}>Gerade eben    Antworten</div>
+            </div>
+            <svg width={30} height={30} viewBox="0 0 24 24" style={{ marginTop: 18 }}><path d="M12 20 C5 15 3 12 3 8.5 C3 6 5 4 7.5 4 C9.3 4 10.9 5 12 6.6 C13.1 5 14.7 4 16.5 4 C19 4 21 6 21 8.5 C21 12 19 15 12 20 Z" fill="none" stroke="#8A8B91" strokeWidth={1.8} /></svg>
+          </div>
+        </div>
+        <div style={{ borderTop: "1px solid #EDEDED", display: "flex", alignItems: "center", gap: 14, padding: "16px 20px" }}>
+          <div style={{ width: 52, height: 52, borderRadius: 26, background: "#D9D9DE", flexShrink: 0 }} />
+          <div style={{ flex: 1, height: 62, borderRadius: 31, background: "#F1F1F2", display: "flex", alignItems: "center", padding: "0 18px 0 22px", gap: 14 }}>
+            <div style={{ flex: 1, fontFamily: "'Inter'", fontWeight: 500, fontSize: 27, color: typing ? "#161823" : "#8A8B91", whiteSpace: "nowrap" }}>
+              {typing ? COMMENT.text.slice(0, n) : "Kommentar hinzufügen …"}
+              {typing && <span style={{ color: TT_RED }}>|</span>}
+            </div>
+            <span style={{ fontFamily: "'Inter'", fontWeight: 600, fontSize: 30, color: "#161823" }}>@</span>
+            <svg width={30} height={30} viewBox="0 0 24 24"><circle cx={12} cy={12} r={9} fill="none" stroke="#161823" strokeWidth={1.8} /><circle cx={9} cy={10} r={1.2} fill="#161823" /><circle cx={15} cy={10} r={1.2} fill="#161823" /><path d="M8 14 C9.5 16.2 14.5 16.2 16 14" fill="none" stroke="#161823" strokeWidth={1.8} strokeLinecap="round" /></svg>
+          </div>
+          {(typing || s < COMMENT.sent + 0.12) && n > 0 && (
+            <div style={{ width: 56, height: 56, borderRadius: 28, background: TT_RED, display: "flex", alignItems: "center", justifyContent: "center", transform: `scale(${press})`, flexShrink: 0 }}>
+              <svg width={26} height={26} viewBox="0 0 20 20"><path d="M10 16 V4 M4.5 9.5 L10 4 L15.5 9.5" stroke="#FFF" strokeWidth={2.6} fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -302,8 +286,8 @@ const CommentBar: React.FC<{ s: number }> = ({ s }) => {
 // ---------- Instagram: Bewerbung per Nachricht an @saliteclothing ----------
 const IG_TAP = 21.92;
 const Insta: React.FC<{ s: number }> = ({ s }) => {
-  if (s < 20.3 || s >= 22.75) return null;
-  const p = inOut(s, 20.3, 22.75);
+  if (s < 20.5 || s >= 22.75) return null;
+  const p = inOut(s, 20.5, 22.75);
   const tap = interpolate(s, [IG_TAP - 0.04, IG_TAP, IG_TAP + 0.08], [1, 0.9, 1], clamp);
   const tapped = s >= IG_TAP;
   return (
@@ -330,19 +314,10 @@ export const ModelsTikTok: React.FC = () => {
   const t = fr / MOD.fps;
   const s = srcSec(fr);
   const b = blurAt(s);
-  const wp = whip(t);
   const gain = shotGain(s);
-  const sd = 55 * wp.w;
   return (
     <AbsoluteFill style={{ background: "#000", overflow: "hidden" }}>
-      <svg width={0} height={0} style={{ position: "absolute" }}>
-        <defs>
-          <filter id="mbx" x="-15%" y="0%" width="130%" height="100%">
-            <feGaussianBlur stdDeviation={`${sd.toFixed(2)} 0`} />
-          </filter>
-        </defs>
-      </svg>
-      <div style={{ position: "absolute", inset: 0, filter: `${sd > 0.5 ? "url(#mbx) " : ""}brightness(${gain}) ${GRADE}`, transform: wp.w > 0 ? `translateX(${wp.dir * 130 * wp.w}px) scale(${1 + 0.1 * wp.w})` : undefined }}>
+      <div style={{ position: "absolute", inset: 0, filter: `brightness(${gain}) ${GRADE}` }}>
         <MainVideo />
       </div>
       {b > 0.01 && (
@@ -353,12 +328,11 @@ export const ModelsTikTok: React.FC = () => {
       <Viewfinder s={s} t={t} />
       <Casting s={s} />
       <Prints s={s} fr={fr} />
-      <Follow s={s} a={16.95} check={17.36} save={17.86} e={COMMENT.e} />
+      <Follow s={s} a={16.95} check={17.36} save={17.86} e={19.83} />
       <Follow s={s} a={25.95} check={26.42} e={27.08} />
       <CommentBar s={s} />
       <Insta s={s} />
       <Taps s={s} />
-      <Slot t={t} />
       <Captions s={s} />
     </AbsoluteFill>
   );

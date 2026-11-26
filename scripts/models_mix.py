@@ -4,7 +4,8 @@ python scripts/models_mix.py <original.mov> <snd_dir> <out.wav>
 - Stimme ohne EQ, Rauschminderung oder Lautheitsanpassung; nur die Pausen an den Schnitten fallen heraus
   (Abschnitte aus src/bf/models_edl.json, 8 ms Blenden gegen Knacken). Der eigene Swish nach dem Intro bleibt.
 - Zu jeder Einblendung ein leiser Klang (Kunde), einzeln gepegelt: Spitze 50 ms RMS gegen p70 der Stimme
-  in 400 ms Fenstern. Glocke beim Folgen deutlicher (minus 15 dB), alles andere minus 20 bis 32 dB.
+  in 400 ms Fenstern. Glocke beim Folgen deutlicher (minus 15 dB), alles andere minus 23 bis 31 dB.
+- V3: kein Swish-Klang an den Schnitten, kein Slot-Klang (Kunde).
 """
 import json
 import os
@@ -59,8 +60,7 @@ vr = mov_rms(v.mean(1), int(0.4 * SR))
 ref = 20 * np.log10(np.percentile(vr[vr > 1e-4], 70))
 # (Quellzeit, Klang, Ziel in dB relativ zur Stimme)
 FX = [
-    (0.84, "afbeep", -30), (1.08, "shutter", -20),            # Sucher: Fokus, Auslöser auf "Models"
-    (2.0, "pop", -32),                                        # Slot erscheint
+    (0.84, "afbeep", -30), (1.08, "shutter", -23),            # Sucher: Fokus, Auslöser auf "Models"
     (3.30, "pop", -28),                                       # Model Casting
     (5.62, "whoosh_soft", -25), (5.72, "paper", -26),         # Abzug Menschenmenge
     (11.40, "clack", -24),                                    # Abzug Filmklappe
@@ -69,10 +69,10 @@ FX = [
     (16.95, "pop", -31), (17.33, "click", -28), (17.36, "ding", -15),  # Folgen: Plus weg, Glocke
     (17.83, "click", -24),                                    # Speichern
     (18.62, "pop", -30),                                      # Kommentarleiste
-    (20.30, "pop", -27), (21.89, "click", -23),               # Instagram, Nachricht
+    (20.50, "pop", -27), (21.89, "click", -23),               # Instagram, Nachricht
     (24.30, "whoosh_soft", -26), (24.40, "paper", -27),       # Abzug Shooting
     (25.95, "pop", -31), (26.39, "click", -28), (26.42, "ding", -15),  # Plus weg, Glocke
-    (28.40, "afbeep", -30), (28.68, "shutter", -20), (28.86, "chime", -22),  # Auslöser, Slot geschafft
+    (28.40, "afbeep", -30), (28.68, "shutter", -23),          # Sucher am Ende
 ]
 TEXT, TA, TE, SENT = "Ich hab Bock", 19.4, 19.76, 19.8
 for i, ch in enumerate(TEXT):
@@ -80,8 +80,6 @@ for i, ch in enumerate(TEXT):
         FX.append((TA + (TE - TA) * i / len(TEXT), f"keyboard_tap{1 + i % 3}", -31))
 FX.append((SENT - 0.03, "click", -26))
 events = [(o(s), n, g) for s, n, g in FX]
-# Swish an jedem Schnitt (Ausgabezeit)
-events += [(st - 0.08, "whoosh_soft", -25) for st in STARTS[1:]]
 cache = {}
 for at, name, target in events:
     if name not in cache:
