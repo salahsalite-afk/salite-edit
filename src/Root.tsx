@@ -22,6 +22,7 @@ import { IGS, IGS_FRAMES, IgStoryShoot } from "./bf/IgStoryShoot";
 import { LS2, LS2_FRAMES, LongsleeveTikTok2 } from "./bf/LongsleeveTikTok2";
 import { MOD, MOD_FRAMES, ModelsTikTok } from "./bf/ModelsTikTok";
 import { TR, TR_FRAMES, TrackieTikTok } from "./bf/TrackieTikTok";
+import { CO, CO_FRAMES, CouchTikTok } from "./bf/CouchTikTok";
 import { BEAMER, SafetyBeamer } from "./card/SafetyBeamer";
 import { BEAMER_CLEAN, SafetyBeamerClean } from "./card/SafetyBeamerClean";
 import { COMIC_CARD, COMIC_SLIDES, SafetyComicCard, SafetyComicSlides } from "./card/SafetyComic";
@@ -89,6 +90,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="GtaBox" component={GtaBox} defaultProps={{}} fps={GFPS} width={1080} height={1920} durationInFrames={GTA_FRAMES} />
     {/* WhatsApp-Kanal-Aufruf mit Passwort speichern */}
     <Composition id="WaChannel" component={WaChannel} defaultProps={{}} fps={WA.fps} width={WA.width} height={WA.height} durationInFrames={WA_FRAMES} />
+    {/* Couch-Dialog: Detail aus 4K, Passwort, Insta, 80 % weg, Jogger 30 €, Black Friday */}
+    <Composition id="CouchTikTok" component={CouchTikTok} defaultProps={{}} fps={CO.fps} width={CO.width} height={CO.height} durationInFrames={CO_FRAMES} />
     {/* Trackie-Video: Hook 69 €, Shopify-Mitteilungen, Kommentar, 550 GSM, Details, Folgen */}
     <Composition id="TrackieTikTok" component={TrackieTikTok} defaultProps={{}} fps={TR.fps} width={TR.width} height={TR.height} durationInFrames={TR_FRAMES} />
     {/* Model-Casting: ohne Zooms, Karten unter den Gesichtern, Plus weg, speichern, Kommentar, Instagram */}
