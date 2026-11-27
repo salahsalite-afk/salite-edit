@@ -25,3 +25,6 @@ public_ls2/
 public_v3/
 public_tr/
 public_au/
+# große Medien und Zwischenstände nicht ins Repo (wie die übrigen Videos)
+public/bf/*.mp4
+public/card/set_src/cut/
